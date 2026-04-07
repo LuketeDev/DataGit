@@ -1,7 +1,6 @@
 package com.lukete.datagit.core.ports;
 
 import com.lukete.datagit.core.domain.Snapshot;
-import com.lukete.datagit.core.domain.SnapshotMetadata;
 
 import java.util.List;
 import java.util.Optional;

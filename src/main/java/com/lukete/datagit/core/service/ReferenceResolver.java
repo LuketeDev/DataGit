@@ -4,6 +4,9 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.exception.InvalidReferenceException;
+import com.lukete.datagit.core.exception.NoSnapshotsFoundException;
+import com.lukete.datagit.core.exception.SnapshotNotFoundException;
 import com.lukete.datagit.core.ports.SnapshotStorage;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +26,7 @@ public class ReferenceResolver {
                 .toList();
 
         if (snapshots.isEmpty()) {
-            throw new RuntimeException("No Snapshots available");
+            throw new NoSnapshotsFoundException();
         }
 
         // HEAD is latest
@@ -35,13 +38,13 @@ public class ReferenceResolver {
             int index = Integer.parseInt(ref.substring(5));
 
             if (index >= snapshots.size()) {
-                throw new RuntimeException("Invalid reference: " + ref);
+                throw new InvalidReferenceException(ref);
             }
 
             return snapshots.get(index);
         }
 
         // fallback: assume it's an ID
-        return storage.load(ref).orElseThrow(() -> new RuntimeException("Snapshot not found: " + ref));
+        return storage.load(ref).orElseThrow(() -> new SnapshotNotFoundException(ref));
     }
 }
