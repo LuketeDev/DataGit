@@ -4,8 +4,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.lukete.datagit.cli.DataGitCommand;
+import com.lukete.datagit.cli.DiffCommand;
+import com.lukete.datagit.cli.LogCommand;
 import com.lukete.datagit.cli.SnapshotCommand;
 import com.lukete.datagit.connector.postgres.PostgresAdapter;
+import com.lukete.datagit.core.service.DiffService;
 import com.lukete.datagit.core.service.SnapshotService;
 import com.lukete.datagit.storage.filesystem.FileSystemSnapshotStorage;
 
@@ -25,17 +28,22 @@ public class Main {
 		// Wire dependencies manually
 		var adapter = new PostgresAdapter(jdbc);
 		var storage = new FileSystemSnapshotStorage("storage/snapshots");
-		var service = new SnapshotService(adapter, storage);
+		var snapshotService = new SnapshotService(adapter, storage);
+		var diffService = new DiffService();
 
 		// CLI
 		var root = new DataGitCommand();
 
 		// inject dependency manually
-		var snapshotCommand = new SnapshotCommand(service);
+		var snapshotCommand = new SnapshotCommand(snapshotService);
+		var diffCommand = new DiffCommand(storage, diffService);
+		var logCommand = new LogCommand(storage);
 
 		// register subcommand instance
 		var commandLine = new CommandLine(root);
 		commandLine.addSubcommand("snapshot", snapshotCommand);
+		commandLine.addSubcommand("diff", diffCommand);
+		commandLine.addSubcommand("log", logCommand);
 
 		// execute CLI
 		commandLine.execute(args);
