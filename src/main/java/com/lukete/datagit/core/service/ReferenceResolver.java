@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.exception.AmbiguousReferenceException;
 import com.lukete.datagit.core.exception.InvalidReferenceException;
 import com.lukete.datagit.core.exception.NoSnapshotsFoundException;
 import com.lukete.datagit.core.exception.SnapshotNotFoundException;
@@ -19,19 +20,39 @@ public class ReferenceResolver {
     private final SnapshotStorage storage;
 
     public Snapshot resolve(String ref) {
-        List<Snapshot> snapshots = storage.list()
-                .stream()
-                // Sort by timestamp and reversed (latest first)
-                .sorted(Comparator.comparing(Snapshot::timestamp).reversed())
-                .toList();
+        List<Snapshot> snapshots = storage.list();
 
         if (snapshots.isEmpty()) {
             throw new NoSnapshotsFoundException();
         }
 
         // HEAD is latest
+        return loadFromRefOrId(ref, snapshots);
+    }
+
+    private Snapshot resolveShortId(String ref, List<Snapshot> snapshots) {
+        var matches = snapshots.stream()
+                .filter(s -> s.id().startsWith(ref))
+                .toList();
+
+        if (matches.isEmpty()) {
+            throw new SnapshotNotFoundException(ref);
+        }
+
+        if (matches.size() > 1) {
+            throw new AmbiguousReferenceException(ref);
+        }
+
+        return matches.get(0);
+    }
+
+    private Snapshot getLatest(List<Snapshot> snapshots) {
+        return snapshots.stream().sorted(Comparator.comparing(Snapshot::timestamp).reversed()).toList().get(0);
+    }
+
+    private Snapshot loadFromRefOrId(String ref, List<Snapshot> snapshots) {
         if (ref.equalsIgnoreCase("HEAD")) {
-            return snapshots.get(0);
+            return getLatest(snapshots);
         }
 
         if (ref.startsWith("HEAD~")) {
@@ -45,6 +66,10 @@ public class ReferenceResolver {
         }
 
         // fallback: assume it's an ID
-        return storage.load(ref).orElseThrow(() -> new SnapshotNotFoundException(ref));
+        return resolveShortId(ref, snapshots);
+        /**
+         * return storage.load(ref).orElseThrow(() -> new
+         * SnapshotNotFoundException(ref))
+         */
     }
 }
