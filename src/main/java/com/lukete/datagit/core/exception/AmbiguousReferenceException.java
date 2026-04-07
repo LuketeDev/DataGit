@@ -3,6 +3,6 @@ package com.lukete.datagit.core.exception;
 public class AmbiguousReferenceException extends DataGitException {
 
     public AmbiguousReferenceException(String ref) {
-        super("Ambiguous reference: " + ref);
+        super("AMIBUGUOUS_REFERENCE", "Ambiguous reference: " + ref);
     }
 }
