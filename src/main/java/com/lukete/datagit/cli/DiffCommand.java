@@ -1,7 +1,8 @@
 package com.lukete.datagit.cli;
 
-import com.lukete.datagit.core.ports.SnapshotStorage;
 import com.lukete.datagit.core.service.DiffService;
+import com.lukete.datagit.core.service.ReferenceResolver;
+
 import static com.lukete.datagit.core.util.JsonUtils.toJson;
 
 import lombok.RequiredArgsConstructor;
@@ -20,15 +21,13 @@ public class DiffCommand implements Runnable {
     @Parameters(index = "1")
     private String newId;
 
-    private final SnapshotStorage storage;
     private final DiffService service;
+    private final ReferenceResolver refResolver;
 
     @Override
     public void run() {
-        var oldSnap = storage.load(oldId)
-                .orElseThrow(() -> new RuntimeException("Could not find snapshot: " + oldId));
-        var newSnap = storage.load(newId)
-                .orElseThrow(() -> new RuntimeException("Could not find snapshot: " + newId));
+        var oldSnap = refResolver.resolve(oldId);
+        var newSnap = refResolver.resolve(newId);
 
         var diff = service.compare(oldSnap, newSnap);
 

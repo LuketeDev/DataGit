@@ -9,6 +9,7 @@ import com.lukete.datagit.cli.LogCommand;
 import com.lukete.datagit.cli.SnapshotCommand;
 import com.lukete.datagit.connector.postgres.PostgresAdapter;
 import com.lukete.datagit.core.service.DiffService;
+import com.lukete.datagit.core.service.ReferenceResolver;
 import com.lukete.datagit.core.service.SnapshotService;
 import com.lukete.datagit.storage.filesystem.FileSystemSnapshotStorage;
 
@@ -30,13 +31,14 @@ public class Main {
 		var storage = new FileSystemSnapshotStorage("storage/snapshots");
 		var snapshotService = new SnapshotService(adapter, storage);
 		var diffService = new DiffService();
+		var resolver = new ReferenceResolver(storage);
 
 		// CLI
 		var root = new DataGitCommand();
 
 		// inject dependency manually
 		var snapshotCommand = new SnapshotCommand(snapshotService);
-		var diffCommand = new DiffCommand(storage, diffService);
+		var diffCommand = new DiffCommand(diffService, resolver);
 		var logCommand = new LogCommand(storage);
 
 		// register subcommand instance

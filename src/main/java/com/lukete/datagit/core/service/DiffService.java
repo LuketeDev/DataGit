@@ -30,7 +30,7 @@ public class DiffService {
             tableDiffs.put(tableName, diff);
         }
 
-        return new DiffResult(tableDiffs);
+        return new DiffResult(oldSnap.id(), newSnap.id(), tableDiffs);
     }
 
     private TableDiff diffTable(

@@ -24,5 +24,5 @@ public interface SnapshotStorage {
     /**
      * Lists all available snapshots (metadata only in future).
      */
-    List<SnapshotMetadata> list();
+    List<Snapshot> list();
 }
