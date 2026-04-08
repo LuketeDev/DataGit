@@ -11,10 +11,12 @@ import com.lukete.datagit.core.exception.SnapshotNotFoundException;
 import com.lukete.datagit.core.ports.SnapshotStorage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Resolves human-friendly references like HEAD, HEAD~1, etc.
  */
+@Slf4j
 @RequiredArgsConstructor
 public class ReferenceResolver {
     private final SnapshotStorage storage;
@@ -67,9 +69,5 @@ public class ReferenceResolver {
 
         // fallback: assume it's an ID
         return resolveShortId(ref, snapshots);
-        /**
-         * return storage.load(ref).orElseThrow(() -> new
-         * SnapshotNotFoundException(ref))
-         */
     }
 }

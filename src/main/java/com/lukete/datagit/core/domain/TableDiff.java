@@ -6,8 +6,8 @@ import java.util.List;
  * Represents changes inside a table.
  */
 public record TableDiff(
-                List<RowChange> deleted,
-                List<RowChange> created,
-                List<RowChange> updated) {
+        List<RowChange> deleted,
+        List<RowChange> inserted,
+        List<RowChange> updated) {
 
 }

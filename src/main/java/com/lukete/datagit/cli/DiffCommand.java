@@ -1,13 +1,13 @@
 package com.lukete.datagit.cli;
 
 import com.lukete.datagit.core.domain.RowChange;
+import com.lukete.datagit.core.domain.RowChangeType;
 import com.lukete.datagit.core.domain.TableDiff;
 import com.lukete.datagit.core.service.DiffService;
 import com.lukete.datagit.core.service.ReferenceResolver;
 
 import static com.lukete.datagit.core.util.JsonUtils.toJson;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,21 +17,20 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-// TODO Defaults to latest and previous.
 @Command(name = "diff", description = "Compare two snapshots.")
 
 @RequiredArgsConstructor
 @Slf4j
 public class DiffCommand implements Runnable {
-    @Parameters(index = "0", description = "ID of the old snapshot (defaults to HEAD~1)")
+    @Parameters(index = "0", description = "ID of the old snapshot (defaults to HEAD~1)", defaultValue = "HEAD~1")
     private String oldId = "HEAD~1";
 
-    @Parameters(index = "1", description = "ID of the new snapshot (defaults to HEAD)")
+    @Parameters(index = "1", description = "ID of the new snapshot (defaults to HEAD)", defaultValue = "HEAD")
     private String newId = "HEAD";
 
     @Option(names = { "-v",
-            "--verbose" }, negatable = true, defaultValue = "true", fallbackValue = "true", description = "Display as object. If false, display as list.")
-    private boolean verbose;
+            "--verbose" }, defaultValue = "false", fallbackValue = "true", description = "Display as object. If false, display as list.")
+    private boolean verbose = false;
 
     private final DiffService service;
     private final ReferenceResolver refResolver;
@@ -40,24 +39,19 @@ public class DiffCommand implements Runnable {
     public void run() {
         var oldSnap = refResolver.resolve(oldId);
         var newSnap = refResolver.resolve(newId);
+        log.info(Boolean.toString(verbose));
 
         if (!verbose) {
             Map<String, TableDiff> tableDiffs = service.compareTableDiffs(oldSnap, newSnap);
-            List<RowChange> deletedList = new ArrayList<>();
-            List<RowChange> insertedList = new ArrayList<>();
-            List<RowChange> updatedList = new ArrayList<>();
-
-            listChanges(tableDiffs, deletedList, insertedList, updatedList);
-
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append('\n');
-            if (isAllEmpty(insertedList, deletedList, updatedList)) {
+
+            if (allTableDiffsEmpty(tableDiffs)) {
                 stringBuilder.append("No differences between the snapshots.");
             } else {
-                addToBuilder(insertedList, "inserted", stringBuilder);
-                addToBuilder(deletedList, "deleted", stringBuilder);
-                addToBuilder(updatedList, "updated", stringBuilder);
+                appendTableDiffs(tableDiffs, stringBuilder);
             }
+
             log.info(stringBuilder.toString());
             return;
         }
@@ -66,51 +60,57 @@ public class DiffCommand implements Runnable {
         log.info(toJson(diff));
     }
 
-    private void addToBuilder(List<RowChange> changes, String type, StringBuilder sb) {
-        if (changes == null || changes.isEmpty()) {
+    private void appendTableDiffs(Map<String, TableDiff> tableDiffs, StringBuilder sb) {
+        tableDiffs.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> {
+                    String tableName = entry.getKey();
+                    TableDiff tableDiff = entry.getValue();
+
+                    if (isTableDiffEmpty(tableDiff)) {
+                        return;
+                    }
+
+                    sb.append("Table: ").append(tableName).append("\n");
+                    appendChanges(tableDiff.inserted(), RowChangeType.INSERTED, sb);
+                    appendChanges(tableDiff.deleted(), RowChangeType.DELETED, sb);
+                    appendChanges(tableDiff.updated(), RowChangeType.UPDATED, sb);
+                    sb.append('\n');
+                });
+    }
+
+    private void appendChanges(List<RowChange> changes, RowChangeType type, StringBuilder sb) {
+        if (changes.isEmpty()) {
             return;
         }
 
-        sb.append(type).append(":\n");
+        sb.append("  ").append(type.getLabel()).append(":\n");
 
         for (RowChange change : changes) {
             switch (type) {
-                case "inserted":
-                    sb.append("+ ").append(change.after()).append("\n");
-                    break;
-
-                case "deleted":
-                    sb.append("- ").append(change.before()).append("\n");
-                    break;
-
-                default: // updated
-                    sb.append("~ ")
+                case INSERTED -> sb.append("    + ").append(change.after()).append("\n");
+                case DELETED -> sb.append("    - ").append(change.before()).append("\n");
+                case UPDATED ->
+                    sb.append("    ~ ")
                             .append(change.before())
-                            .append(" -> ")
+                            .append('\n')
+                            .append("      -> ")
                             .append(change.after())
                             .append("\n");
-                    break;
+                default -> throw new IllegalArgumentException("Unknown change type: " + type);
             }
         }
     }
 
-    private void listChanges(Map<String, TableDiff> tableDiffs, List<RowChange> deletedList,
-            List<RowChange> insertedList,
-            List<RowChange> updatedList) {
-        for (var entry : tableDiffs.entrySet()) {
-            List<RowChange> deleted = entry.getValue().deleted();
-            List<RowChange> inserted = entry.getValue().created();
-            List<RowChange> updated = entry.getValue().updated();
-
-            deletedList.addAll(deleted);
-            insertedList.addAll(inserted);
-            updatedList.addAll(updated);
-        }
+    private boolean isTableDiffEmpty(TableDiff diff) {
+        return diff.inserted().isEmpty()
+                && diff.deleted().isEmpty()
+                && diff.updated().isEmpty();
     }
 
-    private boolean isAllEmpty(Object... args) {
-        for (Object arg : args) {
-            if (!(arg instanceof List<?> list) || !list.isEmpty()) {
+    private boolean allTableDiffsEmpty(Map<String, TableDiff> tableDiffs) {
+        for (TableDiff diff : tableDiffs.values()) {
+            if (!isTableDiffEmpty(diff)) {
                 return false;
             }
         }
