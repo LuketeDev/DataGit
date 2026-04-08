@@ -17,18 +17,7 @@ import com.lukete.datagit.core.domain.TableDiff;
  */
 public class DiffService {
     public DiffResult compare(Snapshot oldSnap, Snapshot newSnap) {
-        Map<String, TableDiff> tableDiffs = new HashMap<>();
-
-        Set<String> allTables = new HashSet<>();
-        allTables.addAll(oldSnap.tables().keySet());
-        allTables.addAll(newSnap.tables().keySet());
-        for (String tableName : allTables) {
-            var oldRows = oldSnap.tables().getOrDefault(tableName, List.of());
-            var newRows = newSnap.tables().getOrDefault(tableName, List.of());
-
-            TableDiff diff = diffTable(oldRows, newRows);
-            tableDiffs.put(tableName, diff);
-        }
+        Map<String, TableDiff> tableDiffs = compareTableDiffs(oldSnap, newSnap);
 
         return new DiffResult(oldSnap.id(), newSnap.id(), tableDiffs);
     }

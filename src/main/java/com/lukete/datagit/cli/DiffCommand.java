@@ -7,7 +7,6 @@ import com.lukete.datagit.core.service.ReferenceResolver;
 
 import static com.lukete.datagit.core.util.JsonUtils.toJson;
 
-import java.security.KeyStore.Entry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +51,7 @@ public class DiffCommand implements Runnable {
 
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append('\n');
-            if (isAnyEmpty(insertedList, deletedList, updatedList)) {
+            if (isAllEmpty(insertedList, deletedList, updatedList)) {
                 stringBuilder.append("No differences between the snapshots.");
             } else {
                 addToBuilder(insertedList, "inserted", stringBuilder);
@@ -65,7 +64,6 @@ public class DiffCommand implements Runnable {
 
         var diff = service.compare(oldSnap, newSnap);
         log.info(toJson(diff));
-
     }
 
     private void addToBuilder(List<RowChange> changes, String type, StringBuilder sb) {
@@ -110,15 +108,12 @@ public class DiffCommand implements Runnable {
         }
     }
 
-    private boolean isAnyEmpty(Object... args) {
+    private boolean isAllEmpty(Object... args) {
         for (Object arg : args) {
-            if (!(arg instanceof List<?> list)) {
-                return true;
-            }
-            if (list.isEmpty()) {
-                return true;
+            if (!(arg instanceof List<?> list) || !list.isEmpty()) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 }
