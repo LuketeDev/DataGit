@@ -33,6 +33,24 @@ public class DiffService {
         return new DiffResult(oldSnap.id(), newSnap.id(), tableDiffs);
     }
 
+    public Map<String, TableDiff> compareTableDiffs(Snapshot oldSnap, Snapshot newSnap) {
+        Map<String, TableDiff> tableDiffs = new HashMap<>();
+
+        Set<String> allTables = new HashSet<>();
+        allTables.addAll(oldSnap.tables().keySet());
+        allTables.addAll(newSnap.tables().keySet());
+        for (String tableName : allTables) {
+            var oldRows = oldSnap.tables().getOrDefault(tableName, List.of());
+            var newRows = newSnap.tables().getOrDefault(tableName, List.of());
+
+            TableDiff diff = diffTable(oldRows, newRows);
+            tableDiffs.put(tableName, diff);
+        }
+
+        return tableDiffs;
+
+    }
+
     private TableDiff diffTable(
             List<Map<String, Object>> oldRows,
             List<Map<String, Object>> newRows) {
