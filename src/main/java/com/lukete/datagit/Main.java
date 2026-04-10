@@ -8,6 +8,8 @@ import com.lukete.datagit.cli.DiffCommand;
 import com.lukete.datagit.cli.LogCommand;
 import com.lukete.datagit.cli.SnapshotCommand;
 import com.lukete.datagit.connector.postgres.PostgresAdapter;
+import com.lukete.datagit.core.exception.CliExecutionExceptionHandler;
+import com.lukete.datagit.core.exception.CliParameterExceptionHandler;
 import com.lukete.datagit.core.service.DiffService;
 import com.lukete.datagit.core.service.ReferenceResolver;
 import com.lukete.datagit.core.service.SnapshotService;
@@ -55,8 +57,11 @@ public class Main {
 		commandLine.addSubcommand("diff", diffCommand);
 		commandLine.addSubcommand("log", logCommand);
 
+		commandLine.setExecutionExceptionHandler(new CliExecutionExceptionHandler(root));
+		commandLine.setParameterExceptionHandler(new CliParameterExceptionHandler());
 		// execute CLI
-		commandLine.execute(args);
+		int exitCode = commandLine.execute(args);
+		System.exit(exitCode);
 
 	}
 

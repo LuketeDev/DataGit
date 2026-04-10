@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * referenceerror
  * Resolves human-friendly references like HEAD, HEAD~1, etc.
  */
 @Slf4j

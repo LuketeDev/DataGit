@@ -12,87 +12,87 @@ import com.lukete.datagit.core.domain.DiffResult;
 import com.lukete.datagit.core.domain.Snapshot;
 
 public class DiffServiceTest {
-    private final DiffService diffService = new DiffService();
+        private final DiffService diffService = new DiffService();
 
-    @Test
-    void should_detect_inserted_rows() {
-        Snapshot oldSnapshot = new Snapshot(
-                "old",
-                Instant.now(),
-                "postgres",
-                Map.of(
-                        "users", List.of(
-                                Map.of("id", 1, "name", "lucas"))));
+        @Test
+        void should_detect_inserted_rows() {
+                Snapshot oldSnapshot = new Snapshot(
+                                "old",
+                                Instant.now(),
+                                "postgres",
+                                Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "lucas"))));
 
-        Snapshot newSnapshot = new Snapshot(
-                "new",
-                Instant.now(),
-                "postgres",
-                Map.of(
-                        "users", List.of(
-                                Map.of("id", 1, "name", "lucas"),
-                                Map.of("id", 2, "name", "luquinhas"))));
+                Snapshot newSnapshot = new Snapshot(
+                                "new",
+                                Instant.now(),
+                                "postgres",
+                                Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "lucas"),
+                                                                Map.of("id", 2, "name", "luquinhas"))));
 
-        DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
+                DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
 
-        assertThat(result.tables()).containsKey("users");
-        assertThat(result.tables().get("users").inserted()).hasSize(1);
-        assertThat(result.tables().get("users").deleted()).isEmpty();
-        assertThat(result.tables().get("users").updated()).isEmpty();
-    }
+                assertThat(result.tables()).containsKey("users");
+                assertThat(result.tables().get("users").inserted()).hasSize(1);
+                assertThat(result.tables().get("users").deleted()).isEmpty();
+                assertThat(result.tables().get("users").updated()).isEmpty();
+        }
 
-    @Test
-    void should_detect_updated_rows() {
-        Snapshot oldSnapshot = new Snapshot(
-                "old",
-                Instant.now(),
-                "postgres",
-                Map.of(
-                        "users", List.of(
-                                Map.of("id", 1, "name", "lucas"))));
+        @Test
+        void should_detect_updated_rows() {
+                Snapshot oldSnapshot = new Snapshot(
+                                "old",
+                                Instant.now(),
+                                "postgres",
+                                Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "lucas"))));
 
-        Snapshot newSnapshot = new Snapshot(
-                "new",
-                Instant.now(),
-                "postgres",
-                Map.of(
-                        "users", List.of(
-                                Map.of("id", 1, "name", "luquinhas"))));
+                Snapshot newSnapshot = new Snapshot(
+                                "new",
+                                Instant.now(),
+                                "postgres",
+                                Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "luquinhas"))));
 
-        DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
+                DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
 
-        assertThat(result.tables().get("users").inserted()).isEmpty();
-        assertThat(result.tables().get("users").deleted()).isEmpty();
-        assertThat(result.tables().get("users").updated()).hasSize(1);
+                assertThat(result.tables().get("users").inserted()).isEmpty();
+                assertThat(result.tables().get("users").deleted()).isEmpty();
+                assertThat(result.tables().get("users").updated()).hasSize(1);
 
-        // The value that was changed in the row 0
-        var change = result.tables().get("users").updated().get(0);
-        assertThat(change.before()).containsEntry("name", "lucas");
-        assertThat(change.after()).containsEntry("name", "luquinhas");
-    }
+                // The value that was changed in the row 0
+                var change = result.tables().get("users").updated().get(0);
+                assertThat(change.before()).containsEntry("name", "lucas");
+                assertThat(change.after()).containsEntry("name", "luquinhas");
+        }
 
-    @Test
-    void should_detect_deleted_rows() {
-        Snapshot oldSnapshot = new Snapshot(
-                "old",
-                Instant.now(),
-                "postgres",
-                Map.of(
-                        "users", List.of(
-                                Map.of("id", 1, "name", "lucas"))));
+        @Test
+        void should_detect_deleted_rows() {
+                Snapshot oldSnapshot = new Snapshot(
+                                "old",
+                                Instant.now(),
+                                "postgres",
+                                Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "lucas"))));
 
-        Snapshot newSnapshot = new Snapshot(
-                "new",
-                Instant.now(),
-                "postgres",
-                Map.of(
-                        "users", List.of(
-                                Map.of("id", 1, "name", "luquinhas"))));
+                Snapshot newSnapshot = new Snapshot(
+                                "new",
+                                Instant.now(),
+                                "postgres",
+                                Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "luquinhas"))));
 
-        DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
+                DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
 
-        assertThat(result.tables().get("users").inserted()).isEmpty();
-        assertThat(result.tables().get("users").deleted()).hasSize(1);
-        assertThat(result.tables().get("users").updated()).isEmpty();
-    }
+                assertThat(result.tables().get("users").inserted()).isEmpty();
+                assertThat(result.tables().get("users").deleted()).hasSize(1);
+                assertThat(result.tables().get("users").updated()).isEmpty();
+        }
 }

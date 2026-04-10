@@ -1,5 +1,6 @@
 package com.lukete.datagit.core.util;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -18,7 +19,7 @@ public class JsonUtils {
         try {
             return mapper.writeValueAsString(obj);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to serialize object to JSON", e);
+            throw new JsonMappingException("Failed to serialize object to JSON");
         }
     }
 }

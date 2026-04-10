@@ -5,4 +5,8 @@ public class InvalidReferenceException extends DataGitException {
     public InvalidReferenceException(String ref) {
         super("INVALID_REFERENCE", "Invalid reference: " + ref);
     }
+
+    public InvalidReferenceException(String ref, Throwable cause) {
+        super("INVALID_REFERENCE", "Invalid reference: " + ref, cause);
+    }
 }

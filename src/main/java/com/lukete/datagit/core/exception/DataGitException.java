@@ -12,6 +12,11 @@ public class DataGitException extends RuntimeException {
         this.code = code;
     }
 
+    public DataGitException(String code, String message, Throwable cause) {
+        super(message, cause);
+        this.code = code;
+    }
+
     public String code() {
         return code;
     }
