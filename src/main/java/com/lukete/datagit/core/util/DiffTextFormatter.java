@@ -11,7 +11,7 @@ import com.lukete.datagit.core.domain.TableDiff;
 public class DiffTextFormatter {
     public String format(DiffResult diffResult) {
         StringBuilder sb = new StringBuilder();
-        sb.append('n');
+        sb.append('\n');
 
         Map<String, TableDiff> tableDiffs = diffResult.tables();
         if (allTableDiffsEmpty(tableDiffs)) {

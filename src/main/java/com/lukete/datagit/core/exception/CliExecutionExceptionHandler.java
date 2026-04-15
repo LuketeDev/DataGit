@@ -2,7 +2,8 @@ package com.lukete.datagit.core.exception;
 
 import java.io.PrintWriter;
 
-import com.lukete.datagit.cli.DataGitCommand;
+import com.lukete.datagit.cli.command.DataGitCommand;
+import com.lukete.datagit.cli.error.ErrorRenderer;
 
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine;
@@ -41,11 +42,14 @@ public class CliExecutionExceptionHandler implements IExecutionExceptionHandler 
 
             return commandLine.getCommandSpec().exitCodeOnExecutionException();
         }
+        if (ex instanceof ConfigCreationException) {
+            err.println(ERROR_LABEL + ex.getMessage());
+        }
 
         if (rootCommand.isVerbose()) {
             ex.printStackTrace();
         } else {
-            err.println(ERROR_LABEL + "Unexpected interanl error.");
+            err.println(ERROR_LABEL + "Unexpected internal error.");
             err.println(ERROR_LABEL + "Re-run with --verbose for more information.");
         }
         return commandLine.getCommandSpec().exitCodeOnExecutionException();

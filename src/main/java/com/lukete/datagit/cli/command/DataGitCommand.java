@@ -1,9 +1,10 @@
-package com.lukete.datagit.cli;
+package com.lukete.datagit.cli.command;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.ScopeType;
 
 /**
  * Root command for DataGit CLI
@@ -15,7 +16,7 @@ import picocli.CommandLine.Option;
 public class DataGitCommand implements Runnable {
 
     @Option(names = {
-            "--display-errors" }, defaultValue = "false", fallbackValue = "true", description = "Display full execution exceptions stack trace.")
+            "--verbose" }, defaultValue = "false", fallbackValue = "true", description = "Display full execution exceptions stack trace.", scope = ScopeType.INHERIT)
     private boolean verbose = false;
 
     @Override

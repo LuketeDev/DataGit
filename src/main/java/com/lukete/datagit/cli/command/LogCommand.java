@@ -1,4 +1,4 @@
-package com.lukete.datagit.cli;
+package com.lukete.datagit.cli.command;
 
 import com.lukete.datagit.core.ports.SnapshotStorage;
 

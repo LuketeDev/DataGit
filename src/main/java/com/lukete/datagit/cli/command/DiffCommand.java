@@ -1,4 +1,4 @@
-package com.lukete.datagit.cli;
+package com.lukete.datagit.cli.command;
 
 import com.lukete.datagit.core.domain.DiffResult;
 import com.lukete.datagit.core.usecase.CompareSnapshotUseCase;
@@ -22,9 +22,9 @@ public class DiffCommand implements Runnable {
     @Parameters(index = "1", description = "ID of the new snapshot (defaults to HEAD)", defaultValue = "HEAD")
     private String newId = "HEAD";
 
-    @Option(names = { "-v",
-            "--verbose" }, defaultValue = "false", fallbackValue = "true", description = "Display as object. If false, display as list.")
-    private boolean verbose = false;
+    @Option(names = {
+            "--complete" }, defaultValue = "false", fallbackValue = "true", description = "Display as object. If false, display as list.")
+    private boolean complete = false;
 
     private final CompareSnapshotUseCase compareSnapshotUseCase;
     private final DiffTextFormatter diffTextFormatter;
@@ -34,7 +34,7 @@ public class DiffCommand implements Runnable {
     public void run() {
         DiffResult diffResult = compareSnapshotUseCase.execute(oldId, newId);
 
-        String output = verbose
+        String output = complete
                 ? diffJsonFormatter.format(diffResult)
                 : diffTextFormatter.format(diffResult);
 

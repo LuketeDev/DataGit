@@ -1,5 +1,7 @@
 HELP.md
 .gradle
+.codex
+.datagit/
 build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
