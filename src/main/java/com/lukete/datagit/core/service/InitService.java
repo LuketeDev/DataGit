@@ -4,13 +4,14 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.lukete.datagit.cli.error.ErrorRenderer;
 import com.lukete.datagit.core.exception.ConfigCreationException;
 
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Creates the initial DataGit configuration and snapshot storage directories.
+ */
 @RequiredArgsConstructor
 public class InitService {
     private static final String DEFAULT_CONFIG = """
@@ -34,6 +35,11 @@ public class InitService {
 
     private boolean snapshotsDirExists;
 
+    /**
+     * Creates the {@code .datagit} directory structure and writes the default configuration file.
+     *
+     * @param isVerbose whether initialization errors should include verbose details
+     */
     public void setupConfig(boolean isVerbose) {
         File rootDir = new File(".datagit");
         File configFile = new File(".datagit/config.yml");

@@ -8,7 +8,16 @@ import com.lukete.datagit.core.domain.RowChange;
 import com.lukete.datagit.core.domain.RowChangeType;
 import com.lukete.datagit.core.domain.TableDiff;
 
+/**
+ * Formats a diff result as human-readable text for CLI output.
+ */
 public class DiffTextFormatter {
+    /**
+     * Produces a textual representation of the provided diff.
+     *
+     * @param diffResult the diff to format
+     * @return the formatted text output
+     */
     public String format(DiffResult diffResult) {
         StringBuilder sb = new StringBuilder();
         sb.append('\n');

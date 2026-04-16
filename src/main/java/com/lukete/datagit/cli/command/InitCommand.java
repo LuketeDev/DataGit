@@ -7,6 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ParentCommand;
 
+/**
+ * CLI command responsible for creating the initial DataGit project structure.
+ */
 @Command(name = "init", description = "Initialize a datagit project")
 @RequiredArgsConstructor
 @Slf4j
@@ -16,6 +19,9 @@ public class InitCommand implements Runnable {
 
     private final InitService initService;
 
+    /**
+     * Initializes the DataGit configuration files and directories.
+     */
     @Override
     public void run() {
         initService.setupConfig(parent.isVerbose());

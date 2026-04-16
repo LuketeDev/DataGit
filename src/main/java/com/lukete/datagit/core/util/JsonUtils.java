@@ -2,7 +2,6 @@ package com.lukete.datagit.core.util;
 
 import org.springframework.core.serializer.support.SerializationFailedException;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
@@ -17,6 +16,12 @@ public class JsonUtils {
     private static final ObjectMapper mapper = new ObjectMapper()
             .enable(SerializationFeature.INDENT_OUTPUT); // pretty print
 
+    /**
+     * Serializes the provided object into an indented JSON string.
+     *
+     * @param obj the object to serialize
+     * @return the serialized JSON representation
+     */
     public static String toJson(Object obj) {
         try {
             return mapper.writeValueAsString(obj);

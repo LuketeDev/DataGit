@@ -18,7 +18,9 @@ public class SnapshotService {
     private final SnapshotStorage storage;
 
     /**
-     * Creates snapshot from datasource and stores it
+     * Creates a snapshot from the configured data source and persists it.
+     *
+     * @return the persisted snapshot enriched with its generated identifier and timestamp
      */
     public Snapshot createSnapshot() {
         Snapshot rawSnapshot = adapter.extract();

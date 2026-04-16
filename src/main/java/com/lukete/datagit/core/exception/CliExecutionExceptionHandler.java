@@ -3,17 +3,29 @@ package com.lukete.datagit.core.exception;
 import java.io.PrintWriter;
 
 import com.lukete.datagit.cli.command.DataGitCommand;
-import com.lukete.datagit.cli.error.ErrorRenderer;
 
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine;
 import picocli.CommandLine.IExecutionExceptionHandler;
 
+/**
+ * Centralizes CLI exception rendering for command execution failures.
+ */
 @RequiredArgsConstructor
 public class CliExecutionExceptionHandler implements IExecutionExceptionHandler {
     private final DataGitCommand rootCommand;
     private static final String ERROR_LABEL = "[!!] ";
 
+    /**
+     * Maps known exceptions to user-friendly CLI messages and preserves verbose
+     * output when requested.
+     *
+     * @param ex          the exception raised during command execution
+     * @param commandLine the active Picocli command line
+     * @param parseResult the parse result for the executed command
+     * @return the exit code configured for execution exceptions
+     * @throws Exception when Picocli requires propagation of the original failure
+     */
     @Override
     public int handleExecutionException(Exception ex, CommandLine commandLine, CommandLine.ParseResult parseResult)
             throws Exception {

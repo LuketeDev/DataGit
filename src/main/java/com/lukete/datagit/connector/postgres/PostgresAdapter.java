@@ -12,13 +12,19 @@ import com.lukete.datagit.core.ports.DataSourceAdapter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Extracts data from a PostgreSQL Database
+ * Extracts the current state of a PostgreSQL database into a {@link Snapshot}.
  */
-
 @RequiredArgsConstructor
 public class PostgresAdapter implements DataSourceAdapter {
     private final JdbcTemplate jdbc;
 
+    /**
+     * Reads all tables from the {@code public} schema and builds a snapshot from
+     * their rows.
+     *
+     * @return a snapshot containing the data currently available in the configured
+     *         database
+     */
     @Override
     public Snapshot extract() {
         Map<String, List<Map<String, Object>>> tables = new HashMap<>();

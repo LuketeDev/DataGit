@@ -11,8 +11,10 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
+/**
+ * CLI command that compares two snapshots and renders the resulting diff.
+ */
 @Command(name = "diff", description = "Compare two snapshots.")
-
 @RequiredArgsConstructor
 @Slf4j
 public class DiffCommand implements Runnable {
@@ -30,6 +32,9 @@ public class DiffCommand implements Runnable {
     private final DiffTextFormatter diffTextFormatter;
     private final DiffJsonFormatter diffJsonFormatter;
 
+    /**
+     * Resolves the requested snapshots, computes the diff, and prints it in the selected format.
+     */
     @Override
     public void run() {
         DiffResult diffResult = compareSnapshotUseCase.execute(oldId, newId);

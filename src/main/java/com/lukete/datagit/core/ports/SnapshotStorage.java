@@ -12,16 +12,23 @@ public interface SnapshotStorage {
 
     /**
      * Saves a snapshot.
+     *
+     * @param snapshot the snapshot to persist
      */
     void save(Snapshot snapshot);
 
     /**
-     * Loads a snapshot by its ID.
+     * Loads a snapshot by its identifier.
+     *
+     * @param id the snapshot identifier
+     * @return the stored snapshot when it exists
      */
     Optional<Snapshot> load(String id);
 
     /**
-     * Lists all available snapshots (metadata only in future).
+     * Lists all available snapshots.
+     *
+     * @return the stored snapshots
      */
     List<Snapshot> list();
 }

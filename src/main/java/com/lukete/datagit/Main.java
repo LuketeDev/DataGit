@@ -22,7 +22,15 @@ import com.lukete.datagit.storage.filesystem.FileSystemSnapshotStorage;
 
 import picocli.CommandLine;
 
+/**
+ * Application entry point that wires the CLI dependencies and executes the requested command.
+ */
 public class Main {
+	/**
+	 * Bootstraps the application and delegates execution to Picocli.
+	 *
+	 * @param args command-line arguments passed by the user
+	 */
 	public static void main(String[] args) {
 		String rootDirPath = System.getProperty("user.dir");
 

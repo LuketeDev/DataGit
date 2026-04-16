@@ -13,15 +13,29 @@ import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.domain.TableDiff;
 
 /**
- * Compares two snapshots and generates a diff
+ * Compares two snapshots and generates row-level diffs grouped by table.
  */
 public class DiffService {
+    /**
+     * Compares two snapshots and wraps the resulting table diffs in a single object.
+     *
+     * @param oldSnap the baseline snapshot
+     * @param newSnap the snapshot to compare against the baseline
+     * @return the complete diff between both snapshots
+     */
     public DiffResult compare(Snapshot oldSnap, Snapshot newSnap) {
         Map<String, TableDiff> tableDiffs = compareTableDiffs(oldSnap, newSnap);
 
         return new DiffResult(oldSnap.id(), newSnap.id(), tableDiffs);
     }
 
+    /**
+     * Compares all tables that exist in either snapshot.
+     *
+     * @param oldSnap the baseline snapshot
+     * @param newSnap the snapshot to compare against the baseline
+     * @return a map keyed by table name containing the detected row-level changes
+     */
     public Map<String, TableDiff> compareTableDiffs(Snapshot oldSnap, Snapshot newSnap) {
         Map<String, TableDiff> tableDiffs = new HashMap<>();
 
@@ -76,7 +90,10 @@ public class DiffService {
     }
 
     /**
-     * Assumes every table has an "id" column.
+     * Indexes table rows by their {@code id} column.
+     *
+     * @param rows the rows to index
+     * @return a map keyed by row identifier
      */
     private Map<Object, Map<String, Object>> indexById(
             List<Map<String, Object>> rows) {

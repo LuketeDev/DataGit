@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * referenceerror
  * Resolves human-friendly references like HEAD, HEAD~1, etc.
  */
 @Slf4j
@@ -22,6 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ReferenceResolver {
     private final SnapshotStorage storage;
 
+    /**
+     * Resolves a snapshot reference to a concrete snapshot instance.
+     *
+     * @param ref the reference to resolve, such as {@code HEAD}, {@code HEAD~1}, or a snapshot ID prefix
+     * @return the snapshot matched by the provided reference
+     */
     public Snapshot resolve(String ref) {
         List<Snapshot> snapshots = storage.list();
 

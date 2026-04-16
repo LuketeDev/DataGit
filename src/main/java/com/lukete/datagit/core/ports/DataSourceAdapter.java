@@ -11,7 +11,7 @@ public interface DataSourceAdapter {
     /**
      * Extracts the full state of the data source.
      *
-     * @return a complete Snapshot of the data source
+     * @return a complete snapshot of the data source
      */
     Snapshot extract();
 }
