@@ -1,7 +1,6 @@
 package com.lukete.datagit.cli.output;
 
 import java.io.PrintWriter;
-import java.security.MessageDigest;
 
 import lombok.RequiredArgsConstructor;
 

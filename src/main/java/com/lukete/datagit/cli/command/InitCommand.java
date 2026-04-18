@@ -1,9 +1,9 @@
 package com.lukete.datagit.cli.command;
 
+import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.core.service.InitService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ParentCommand;
 
@@ -12,12 +12,13 @@ import picocli.CommandLine.ParentCommand;
  */
 @Command(name = "init", description = "Initialize a datagit project")
 @RequiredArgsConstructor
-@Slf4j
+
 public class InitCommand implements Runnable {
     @ParentCommand
     DataGitCommand parent;
 
     private final InitService initService;
+    private final CliPrinter printer;
 
     /**
      * Initializes the DataGit configuration files and directories.
@@ -25,7 +26,7 @@ public class InitCommand implements Runnable {
     @Override
     public void run() {
         initService.setupConfig(parent.isVerbose());
-        log.info("[v] DataGit initialized succesfully.");
-        log.info("[v] Created .datagit/ directory.");
+        printer.success("[v] DataGit initialized succesfully.");
+        printer.success("[v] Created .datagit/ directory.");
     }
 }

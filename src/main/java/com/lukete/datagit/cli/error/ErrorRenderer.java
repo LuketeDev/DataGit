@@ -1,12 +1,12 @@
 package com.lukete.datagit.cli.error;
 
-import lombok.extern.slf4j.Slf4j;
+import com.lukete.datagit.cli.output.CliPrinter;
 
-@Slf4j
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class ErrorRenderer {
-    private ErrorRenderer() {
-        /* This utility class should not be instantiated */
-    }
+    private final CliPrinter printer;
 
     /**
      * Renders an exception either as a full stack trace or as a concise message.
@@ -14,11 +14,11 @@ public class ErrorRenderer {
      * @param e       the exception to render
      * @param verbose whether the full stack trace should be printed
      */
-    public static void render(Throwable e, boolean verbose) {
+    public void render(Throwable e, boolean verbose) {
         if (verbose) {
             e.printStackTrace();
         } else {
-            log.error(e.getMessage());
+            printer.error(e.getMessage());
         }
     }
 }

@@ -1,9 +1,9 @@
 package com.lukete.datagit.cli.command;
 
+import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.core.service.SnapshotService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 
 /**
@@ -12,9 +12,9 @@ import picocli.CommandLine.Command;
  */
 @Command(name = "snapshot", description = "Creates a new snapshot from Database")
 @RequiredArgsConstructor
-@Slf4j
 public class SnapshotCommand implements Runnable {
     private final SnapshotService service;
+    private final CliPrinter printer;
 
     /**
      * Creates a new snapshot and prints its generated identifier.
@@ -23,7 +23,7 @@ public class SnapshotCommand implements Runnable {
     public void run() {
         var snapshot = service.createSnapshot();
 
-        log.info("Snapshot created: " + snapshot.id());
+        printer.success("Snapshot created: " + snapshot.id());
     }
 
 }

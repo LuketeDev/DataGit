@@ -1,6 +1,5 @@
 package com.lukete.datagit;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -16,6 +15,7 @@ import com.lukete.datagit.cli.command.DiffCommand;
 import com.lukete.datagit.cli.command.InitCommand;
 import com.lukete.datagit.cli.command.LogCommand;
 import com.lukete.datagit.cli.command.SnapshotCommand;
+import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.connector.postgres.PostgresAdapter;
 import com.lukete.datagit.core.exception.CliExecutionExceptionHandler;
 import com.lukete.datagit.core.exception.CliParameterExceptionHandler;
@@ -46,8 +46,8 @@ public class Main {
 	public static void main(String[] args) {
 		var root = new DataGitCommand();
 		var commandLine = new CommandLine(root);
-		var initService = new InitService();
-		var initCommand = new InitCommand(initService);
+		var initService = new InitService(new CliPrinter(commandLine.getOut(), commandLine.getErr()));
+		var initCommand = new InitCommand(initService, new CliPrinter(commandLine.getOut(), commandLine.getErr()));
 
 		commandLine.addSubcommand("init", initCommand);
 
@@ -95,11 +95,12 @@ public class Main {
 
 		var diffJsonFormatter = new DiffJsonFormatter();
 		var diffTextFormatter = new DiffTextFormatter();
+		var printer = new CliPrinter(commandLine.getOut(), commandLine.getErr());
 
-		commandLine.addSubcommand("snapshot", new SnapshotCommand(snapshotService));
+		commandLine.addSubcommand("snapshot", new SnapshotCommand(snapshotService, printer));
 		commandLine.addSubcommand("diff",
-				new DiffCommand(compareSnapshotUseCase, diffTextFormatter, diffJsonFormatter));
-		commandLine.addSubcommand("log", new LogCommand(storage));
+				new DiffCommand(compareSnapshotUseCase, diffTextFormatter, diffJsonFormatter, printer));
+		commandLine.addSubcommand("log", new LogCommand(storage, printer));
 	}
 
 	private static boolean requiresConfig(String[] args) {

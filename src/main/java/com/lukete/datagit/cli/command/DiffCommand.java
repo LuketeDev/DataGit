@@ -1,12 +1,12 @@
 package com.lukete.datagit.cli.command;
 
+import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.core.domain.DiffResult;
 import com.lukete.datagit.core.usecase.CompareSnapshotUseCase;
 import com.lukete.datagit.core.util.DiffJsonFormatter;
 import com.lukete.datagit.core.util.DiffTextFormatter;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -16,7 +16,6 @@ import picocli.CommandLine.Parameters;
  */
 @Command(name = "diff", description = "Compare two snapshots.")
 @RequiredArgsConstructor
-@Slf4j
 public class DiffCommand implements Runnable {
     @Parameters(index = "0", description = "ID of the old snapshot (defaults to HEAD~1)", defaultValue = "HEAD~1")
     private String oldId = "HEAD~1";
@@ -31,9 +30,11 @@ public class DiffCommand implements Runnable {
     private final CompareSnapshotUseCase compareSnapshotUseCase;
     private final DiffTextFormatter diffTextFormatter;
     private final DiffJsonFormatter diffJsonFormatter;
+    private final CliPrinter printer;
 
     /**
-     * Resolves the requested snapshots, computes the diff, and prints it in the selected format.
+     * Resolves the requested snapshots, computes the diff, and prints it in the
+     * selected format.
      */
     @Override
     public void run() {
@@ -43,6 +44,6 @@ public class DiffCommand implements Runnable {
                 ? diffJsonFormatter.format(diffResult)
                 : diffTextFormatter.format(diffResult);
 
-        log.info(output);
+        printer.info(output);
     }
 }

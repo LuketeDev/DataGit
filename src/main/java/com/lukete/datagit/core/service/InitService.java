@@ -5,6 +5,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import com.lukete.datagit.cli.error.ErrorRenderer;
+import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.core.exception.ConfigCreationException;
 
 import lombok.RequiredArgsConstructor;
@@ -34,9 +35,11 @@ public class InitService {
             """;
 
     private boolean snapshotsDirExists;
+    private final CliPrinter printer;
 
     /**
-     * Creates the {@code .datagit} directory structure and writes the default configuration file.
+     * Creates the {@code .datagit} directory structure and writes the default
+     * configuration file.
      *
      * @param isVerbose whether initialization errors should include verbose details
      */
@@ -44,19 +47,20 @@ public class InitService {
         File rootDir = new File(".datagit");
         File configFile = new File(".datagit/config.yml");
         File snapshotsDir = new File(".datagit/snapshots");
+        ErrorRenderer renderer = new ErrorRenderer(printer);
         if (configFile.exists()) {
-            ErrorRenderer.render(new ConfigCreationException("[!!] Config file already exists."), isVerbose);
+            renderer.render(new ConfigCreationException("[!!] Config file already exists."), isVerbose);
         }
         if (snapshotsDir.exists()) {
-            ErrorRenderer.render(new ConfigCreationException("[!!] Snapshot directory exists."), isVerbose);
+            renderer.render(new ConfigCreationException("[!!] Snapshot directory exists."), isVerbose);
             snapshotsDirExists = true;
         }
         if (rootDir.exists()) {
-            ErrorRenderer.render(new ConfigCreationException("[!!] DataGit already initialized in this directory."),
+            renderer.render(new ConfigCreationException("[!!] DataGit already initialized in this directory."),
                     isVerbose);
         }
         if (!snapshotsDir.mkdirs()) {
-            ErrorRenderer.render(new ConfigCreationException("[!!] Failed to create .datagit/snapshots directory"),
+            renderer.render(new ConfigCreationException("[!!] Failed to create .datagit/snapshots directory"),
                     isVerbose);
             if (!snapshotsDirExists) {
                 return;
@@ -65,7 +69,7 @@ public class InitService {
         try (FileWriter fileWriter = new FileWriter(configFile)) {
             fileWriter.write(DEFAULT_CONFIG);
         } catch (IOException e) {
-            ErrorRenderer.render(new ConfigCreationException("Failed to write config file: ", e), isVerbose);
+            renderer.render(new ConfigCreationException("Failed to write config file: ", e), isVerbose);
         }
     }
 }
