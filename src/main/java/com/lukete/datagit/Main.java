@@ -1,7 +1,15 @@
 package com.lukete.datagit;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Map;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.yaml.snakeyaml.Yaml;
 
 import com.lukete.datagit.cli.command.DataGitCommand;
 import com.lukete.datagit.cli.command.DiffCommand;
@@ -23,63 +31,119 @@ import com.lukete.datagit.storage.filesystem.FileSystemSnapshotStorage;
 import picocli.CommandLine;
 
 /**
- * Application entry point that wires the CLI dependencies and executes the requested command.
+ * Application entry point that wires the CLI dependencies and executes the
+ * requested command.
  */
 public class Main {
+	private static final Path ROOT = Path.of(System.getProperty("user.dir"));
+	private static final Path CONFIG_PATH = ROOT.resolve(".datagit").resolve("config.yml");
+
 	/**
 	 * Bootstraps the application and delegates execution to Picocli.
 	 *
 	 * @param args command-line arguments passed by the user
 	 */
 	public static void main(String[] args) {
-		String rootDirPath = System.getProperty("user.dir");
+		var root = new DataGitCommand();
+		var commandLine = new CommandLine(root);
+		var initService = new InitService();
+		var initCommand = new InitCommand(initService);
 
-		// Configure Datasource for Postgres
+		commandLine.addSubcommand("init", initCommand);
+
+		// Allow `datagit init` and help/version output to run before a project has been
+		// initialized. Every other command depends on values from .datagit/config.yml.
+		if (Files.exists(CONFIG_PATH)) {
+			registerConfiguredCommands(commandLine);
+		} else if (requiresConfig(args)) {
+			throw new IllegalStateException("Missing .datagit/config.yml. Run `datagit init` first.");
+		}
+
+		// Register handlers after the full command tree is in place.
+		commandLine.setExecutionExceptionHandler(new CliExecutionExceptionHandler(root));
+		commandLine.setParameterExceptionHandler(new CliParameterExceptionHandler());
+
+		int exitCode = commandLine.execute(args);
+		System.exit(exitCode);
+	}
+
+	private static void registerConfiguredCommands(CommandLine commandLine) {
+		String databaseType = getYamlConfigValueFromKey("database.type");
+		if (!"postgres".equalsIgnoreCase(databaseType)) {
+			throw new IllegalStateException("Unsupported database.type: " + databaseType);
+		}
+
 		var dataSource = new DriverManagerDataSource();
-		dataSource.setUrl("jdbc:postgresql://localhost:5433/datagit_db_dev");
-		dataSource.setUsername("postgres");
-		dataSource.setPassword("postgres");
+		dataSource.setUrl(String.format(
+				"jdbc:postgresql://%s:%s/%s",
+				getYamlConfigValueFromKey("database.host"),
+				getYamlConfigValueFromKey("database.port"),
+				getYamlConfigValueFromKey("database.name")));
+		dataSource.setUsername(getYamlConfigValueFromKey("database.username"));
+		dataSource.setPassword(getYamlConfigValueFromKey("database.password"));
 
 		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
-
-		// Wire dependencies manually
 		var adapter = new PostgresAdapter(jdbc);
-		var storage = new FileSystemSnapshotStorage(rootDirPath + "/.datagit/snapshots");
+
+		// Resolve relative storage paths from the project root so the YAML can stay
+		// portable, but the storage implementation still gets an absolute path.
+		var storage = new FileSystemSnapshotStorage(resolvePath(getYamlConfigValueFromKey("storage.path")).toString());
 		var snapshotService = new SnapshotService(adapter, storage);
 		var diffService = new DiffService();
 		var resolver = new ReferenceResolver(storage);
 		var compareSnapshotUseCase = new CompareSnapshotUseCase(resolver, diffService);
-		var initService = new InitService();
 
-		// Diff formatters
 		var diffJsonFormatter = new DiffJsonFormatter();
 		var diffTextFormatter = new DiffTextFormatter();
 
-		// CLI
-		var root = new DataGitCommand();
-
-		// inject dependency manually
-		var snapshotCommand = new SnapshotCommand(snapshotService);
-		var diffCommand = new DiffCommand(compareSnapshotUseCase, diffTextFormatter, diffJsonFormatter);
-		var logCommand = new LogCommand(storage);
-		var initCommand = new InitCommand(initService);
-
-		// register subcommand instance
-		var commandLine = new CommandLine(root);
-		commandLine.addSubcommand("snapshot", snapshotCommand);
-		commandLine.addSubcommand("diff", diffCommand);
-		commandLine.addSubcommand("log", logCommand);
-		commandLine.addSubcommand("init", initCommand);
-
-		// register exception handlers
-		commandLine.setExecutionExceptionHandler(new CliExecutionExceptionHandler(root));
-		commandLine.setParameterExceptionHandler(new CliParameterExceptionHandler());
-
-		// execute CLI
-		// usage: datagit [subcommand] [options...]
-		int exitCode = commandLine.execute(args);
-		System.exit(exitCode);
-
+		commandLine.addSubcommand("snapshot", new SnapshotCommand(snapshotService));
+		commandLine.addSubcommand("diff",
+				new DiffCommand(compareSnapshotUseCase, diffTextFormatter, diffJsonFormatter));
+		commandLine.addSubcommand("log", new LogCommand(storage));
 	}
 
+	private static boolean requiresConfig(String[] args) {
+		for (String arg : args) {
+			if ("-h".equals(arg) || "--help".equals(arg) || "-V".equals(arg) || "--version".equals(arg)) {
+				return false;
+			}
+			if (!arg.startsWith("-")) {
+				return !"init".equals(arg);
+			}
+		}
+		return false;
+	}
+
+	private static Path resolvePath(String configuredPath) {
+		Path path = Path.of(configuredPath);
+		return path.isAbsolute() ? path : ROOT.resolve(path).normalize();
+	}
+
+	private static String getYamlConfigValueFromKey(String key) {
+		Yaml yaml = new Yaml();
+
+		try (InputStream inputStream = Files.newInputStream(CONFIG_PATH)) {
+			Map<String, Object> configMap = yaml.load(inputStream);
+			if (configMap == null) {
+				throw new IllegalStateException("Configuration file is empty: " + CONFIG_PATH);
+			}
+
+			Object currentValue = configMap;
+			// Support dotted keys like `storage.path` by walking nested YAML maps one
+			// segment at a time.
+			for (String keyPart : key.split("\\.")) {
+				if (!(currentValue instanceof Map<?, ?> currentMap)) {
+					throw new IllegalStateException("Config key does not point to a scalar value: " + key);
+				}
+				// Checks if
+				currentValue = currentMap.get(keyPart);
+				if (currentValue == null) {
+					throw new IllegalStateException("Missing config key: " + key);
+				}
+			}
+			return currentValue.toString();
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to read configuration file: " + CONFIG_PATH, e);
+		}
+	}
 }
