@@ -24,7 +24,8 @@ public class ReferenceResolver {
     /**
      * Resolves a snapshot reference to a concrete snapshot instance.
      *
-     * @param ref the reference to resolve, such as {@code HEAD}, {@code HEAD~1}, or a snapshot ID prefix
+     * @param ref the reference to resolve, such as {@code HEAD}, {@code HEAD~1}, or
+     *            a snapshot ID prefix
      * @return the snapshot matched by the provided reference
      */
     public Snapshot resolve(String ref) {
@@ -35,7 +36,7 @@ public class ReferenceResolver {
         }
 
         // HEAD is latest
-        return loadFromRefOrId(ref, snapshots);
+        return loadFromRefOrId(ref, sortSnapshots(snapshots));
     }
 
     private Snapshot resolveShortId(String ref, List<Snapshot> snapshots) {
@@ -55,7 +56,11 @@ public class ReferenceResolver {
     }
 
     private Snapshot getLatest(List<Snapshot> snapshots) {
-        return snapshots.stream().sorted(Comparator.comparing(Snapshot::timestamp).reversed()).toList().get(0);
+        return snapshots.get(0);
+    }
+
+    private List<Snapshot> sortSnapshots(List<Snapshot> snapshots) {
+        return snapshots.stream().sorted(Comparator.comparing(Snapshot::timestamp).reversed()).toList();
     }
 
     private Snapshot loadFromRefOrId(String ref, List<Snapshot> snapshots) {
