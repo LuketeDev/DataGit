@@ -9,24 +9,35 @@ public class CliPrinter {
     private final PrintWriter out;
     private final PrintWriter err;
 
+    public void print(MessageStyle style, String message) {
+        String line = style.label() + "  " + message;
+
+        if (style == MessageStyle.ERROR || style == MessageStyle.WARNING) {
+            err.println(line);
+            return;
+        }
+
+        out.println(line);
+    }
+
     public void success(String message) {
-        out.println(message);
+        print(MessageStyle.SUCCESS, message);
     }
 
     public void info(String message) {
-        out.println("INFO " + message);
+        print(MessageStyle.INFO, message);
     }
 
     public void warn(String message) {
-        err.println("WARN " + message);
+        print(MessageStyle.WARNING, message);
     }
 
     public void error(String message) {
-        err.println("ERROR " + message);
+        print(MessageStyle.ERROR, message);
     }
 
     public void hint(String message) {
-        out.println("TIP " + message);
+        print(MessageStyle.HINT, message);
     }
 
     public void blankLine() {
