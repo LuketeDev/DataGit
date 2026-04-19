@@ -10,13 +10,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.yaml.snakeyaml.Yaml;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lukete.datagit.cli.command.DataGitCommand;
 import com.lukete.datagit.cli.command.DiffCommand;
 import com.lukete.datagit.cli.command.InitCommand;
 import com.lukete.datagit.cli.command.LogCommand;
 import com.lukete.datagit.cli.command.SnapshotCommand;
 import com.lukete.datagit.cli.output.CliPrinter;
+import com.lukete.datagit.cli.output.JsonDIffRenderer;
 import com.lukete.datagit.cli.output.LogCliRenderer;
+import com.lukete.datagit.cli.output.TextDiffRenderer;
 import com.lukete.datagit.connector.postgres.PostgresAdapter;
 import com.lukete.datagit.core.exception.CliExecutionExceptionHandler;
 import com.lukete.datagit.core.exception.CliParameterExceptionHandler;
@@ -25,8 +28,6 @@ import com.lukete.datagit.core.service.InitService;
 import com.lukete.datagit.core.service.ReferenceResolver;
 import com.lukete.datagit.core.service.SnapshotService;
 import com.lukete.datagit.core.usecase.CompareSnapshotUseCase;
-import com.lukete.datagit.core.util.DiffJsonFormatter;
-import com.lukete.datagit.core.util.DiffTextFormatter;
 import com.lukete.datagit.storage.filesystem.FileSystemSnapshotStorage;
 
 import picocli.CommandLine;
@@ -94,14 +95,15 @@ public class Main {
 		var resolver = new ReferenceResolver(storage);
 		var compareSnapshotUseCase = new CompareSnapshotUseCase(resolver, diffService);
 
-		var diffJsonFormatter = new DiffJsonFormatter();
-		var diffTextFormatter = new DiffTextFormatter();
 		var printer = new CliPrinter(commandLine.getOut(), commandLine.getErr());
+		var objMapper = new ObjectMapper();
+		var jsonDiffRenderer = new JsonDIffRenderer(printer, objMapper);
+		var textDiffRenderer = new TextDiffRenderer(printer);
 		var logCliRenderer = new LogCliRenderer(printer);
 
 		commandLine.addSubcommand("snapshot", new SnapshotCommand(snapshotService, printer));
 		commandLine.addSubcommand("diff",
-				new DiffCommand(compareSnapshotUseCase, diffTextFormatter, diffJsonFormatter, printer));
+				new DiffCommand(compareSnapshotUseCase, jsonDiffRenderer, textDiffRenderer));
 		commandLine.addSubcommand("log", new LogCommand(storage, logCliRenderer));
 	}
 

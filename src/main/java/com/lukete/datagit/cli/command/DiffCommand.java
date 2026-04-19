@@ -1,11 +1,8 @@
 package com.lukete.datagit.cli.command;
 
-import com.lukete.datagit.cli.output.CliPrinter;
-import com.lukete.datagit.core.domain.DiffResult;
+import com.lukete.datagit.cli.output.DiffRenderer;
+import com.lukete.datagit.cli.output.OutputFormat;
 import com.lukete.datagit.core.usecase.CompareSnapshotUseCase;
-import com.lukete.datagit.core.util.DiffJsonFormatter;
-import com.lukete.datagit.core.util.DiffTextFormatter;
-
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -24,13 +21,12 @@ public class DiffCommand implements Runnable {
     private String newId = "HEAD";
 
     @Option(names = {
-            "--complete" }, defaultValue = "false", fallbackValue = "true", description = "Display as object. If false, display as list.")
-    private boolean complete = false;
+            "--format" }, defaultValue = "text", description = "Output format: ${COMPLETION-CANDIDATES}")
+    private OutputFormat outputFormat;
 
     private final CompareSnapshotUseCase compareSnapshotUseCase;
-    private final DiffTextFormatter diffTextFormatter;
-    private final DiffJsonFormatter diffJsonFormatter;
-    private final CliPrinter printer;
+    private final DiffRenderer jsonRenderer;
+    private final DiffRenderer textRenderer;
 
     /**
      * Resolves the requested snapshots, computes the diff, and prints it in the
@@ -38,12 +34,10 @@ public class DiffCommand implements Runnable {
      */
     @Override
     public void run() {
-        DiffResult diffResult = compareSnapshotUseCase.execute(oldId, newId);
+        var diffResult = compareSnapshotUseCase.execute(oldId, newId);
 
-        String output = complete
-                ? diffJsonFormatter.format(diffResult)
-                : diffTextFormatter.format(diffResult);
+        DiffRenderer renderer = outputFormat == OutputFormat.TEXT ? textRenderer : jsonRenderer;
 
-        printer.info(output);
+        renderer.render(oldId, newId, diffResult);
     }
 }

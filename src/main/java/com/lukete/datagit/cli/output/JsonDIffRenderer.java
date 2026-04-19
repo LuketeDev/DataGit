@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lukete.datagit.core.domain.DiffResult;
+import com.lukete.datagit.core.exception.DiffRenderingException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,6 +16,14 @@ public class JsonDIffRenderer implements DiffRenderer {
 
     @Override
     public void render(String leftRef, String rightRef, DiffResult diffResult) {
+        /**
+         * LinkedHashMap preserves insertion order, so output will always be:
+         * {
+         * "leftRef":"..."
+         * "rightRef":"..."
+         * "diff":{...}
+         * }
+         */
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("leftRef", leftRef);
         payload.put("rightRef", rightRef);
@@ -23,7 +32,7 @@ public class JsonDIffRenderer implements DiffRenderer {
             String json = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload);
             printer.info(json);
         } catch (Exception e) {
-            throw new RuntimeException("Failed to render diff as JSON", e);
+            throw new DiffRenderingException("Failed to render diff as JSON", e);
         }
     }
 
