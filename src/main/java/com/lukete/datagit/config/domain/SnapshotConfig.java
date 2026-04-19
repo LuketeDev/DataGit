@@ -8,5 +8,5 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SnapshotConfig {
-    private List<String> ignoredCollumns;
+    private List<String> ignoredColumns;
 }

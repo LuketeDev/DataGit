@@ -60,11 +60,11 @@ public class ConfigValidator {
         if (snapshotConfig == null) {
             return;
         }
-        if (snapshotConfig.getIgnoredCollumns() == null) {
+        if (snapshotConfig.getIgnoredColumns() == null) {
             return;
         }
 
-        for (String column : snapshotConfig.getIgnoredCollumns()) {
+        for (String column : snapshotConfig.getIgnoredColumns()) {
             requireNotBlank(column, "snapshot.ignoredColumns contains a blank value.");
         }
     }

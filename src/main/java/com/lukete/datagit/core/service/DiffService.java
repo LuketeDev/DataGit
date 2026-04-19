@@ -7,15 +7,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.core.domain.DiffResult;
 import com.lukete.datagit.core.domain.RowChange;
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.domain.TableDiff;
 
+import lombok.RequiredArgsConstructor;
+
 /**
  * Compares two snapshots and generates row-level diffs grouped by table.
  */
+
+@RequiredArgsConstructor
 public class DiffService {
+    private final SnapshotNormalizer snapshotNormalizer;
+    private final DataGitConfig config;
+
     /**
      * Compares two snapshots and wraps the resulting table diffs in a single
      * object.
@@ -25,7 +33,12 @@ public class DiffService {
      * @return the complete diff between both snapshots
      */
     public DiffResult compare(Snapshot oldSnap, Snapshot newSnap) {
-        Map<String, TableDiff> tableDiffs = compareTableDiffs(oldSnap, newSnap);
+        Snapshot normalizedOldSnap = snapshotNormalizer.normalize(oldSnap,
+                config.getSnapshotConfig().getIgnoredColumns());
+        Snapshot normalizedNewSnap = snapshotNormalizer.normalize(newSnap,
+                config.getSnapshotConfig().getIgnoredColumns());
+
+        Map<String, TableDiff> tableDiffs = compareTableDiffs(normalizedOldSnap, normalizedNewSnap);
 
         return new DiffResult(oldSnap.id(), newSnap.id(), tableDiffs);
     }

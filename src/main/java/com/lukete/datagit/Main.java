@@ -27,6 +27,7 @@ import com.lukete.datagit.core.exception.CliParameterExceptionHandler;
 import com.lukete.datagit.core.service.DiffService;
 import com.lukete.datagit.core.service.InitService;
 import com.lukete.datagit.core.service.ReferenceResolver;
+import com.lukete.datagit.core.service.SnapshotNormalizer;
 import com.lukete.datagit.core.service.SnapshotService;
 import com.lukete.datagit.core.service.StatusService;
 import com.lukete.datagit.core.usecase.CompareSnapshotUseCase;
@@ -92,12 +93,13 @@ public class Main {
 		// Resolve relative storage paths from the project root so the YAML can stay
 		// portable, but the storage implementation still gets an absolute path.
 		var storage = new FileSystemSnapshotStorage(resolvePath(storageConfig.getPath()).toString());
+		var snapshotNormalizer = new SnapshotNormalizer();
 
-		var snapshotService = new SnapshotService(adapter, storage);
-		var diffService = new DiffService();
+		var snapshotService = new SnapshotService(adapter, storage, snapshotNormalizer, config);
+		var diffService = new DiffService(snapshotNormalizer, config);
 		var resolver = new ReferenceResolver(storage);
 		var compareSnapshotUseCase = new CompareSnapshotUseCase(resolver, diffService);
-		var statusService = new StatusService(adapter, resolver, diffService);
+		var statusService = new StatusService(adapter, resolver, diffService, snapshotNormalizer, config);
 
 		var objMapper = new ObjectMapper();
 		var jsonDiffRenderer = new JsonDiffRenderer(printer, objMapper);
