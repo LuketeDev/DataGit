@@ -17,7 +17,8 @@ import com.lukete.datagit.core.domain.TableDiff;
  */
 public class DiffService {
     /**
-     * Compares two snapshots and wraps the resulting table diffs in a single object.
+     * Compares two snapshots and wraps the resulting table diffs in a single
+     * object.
      *
      * @param oldSnap the baseline snapshot
      * @param newSnap the snapshot to compare against the baseline
