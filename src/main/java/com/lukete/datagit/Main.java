@@ -1,16 +1,12 @@
 package com.lukete.datagit;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.yaml.snakeyaml.Yaml;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.lukete.datagit.cli.command.DataGitCommand;
 import com.lukete.datagit.cli.command.DiffCommand;
 import com.lukete.datagit.cli.command.InitCommand;
@@ -18,9 +14,13 @@ import com.lukete.datagit.cli.command.LogCommand;
 import com.lukete.datagit.cli.command.SnapshotCommand;
 import com.lukete.datagit.cli.command.StatusCommand;
 import com.lukete.datagit.cli.output.CliPrinter;
-import com.lukete.datagit.cli.output.JsonDIffRenderer;
+import com.lukete.datagit.cli.output.JsonDiffRenderer;
 import com.lukete.datagit.cli.output.LogCliRenderer;
 import com.lukete.datagit.cli.output.TextDiffRenderer;
+import com.lukete.datagit.config.ConfigLoader;
+import com.lukete.datagit.config.ConfigValidator;
+import com.lukete.datagit.config.ProjectLocator;
+import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.connector.postgres.PostgresAdapter;
 import com.lukete.datagit.core.exception.CliExecutionExceptionHandler;
 import com.lukete.datagit.core.exception.CliParameterExceptionHandler;
@@ -40,7 +40,6 @@ import picocli.CommandLine;
  */
 public class Main {
 	private static final Path ROOT = Path.of(System.getProperty("user.dir"));
-	private static final Path CONFIG_PATH = ROOT.resolve(".datagit").resolve("config.yml");
 
 	/**
 	 * Bootstraps the application and delegates execution to Picocli.
@@ -50,17 +49,13 @@ public class Main {
 	public static void main(String[] args) {
 		var root = new DataGitCommand();
 		var commandLine = new CommandLine(root);
-		var initService = new InitService(new CliPrinter(commandLine.getOut(), commandLine.getErr()));
-		var initCommand = new InitCommand(initService, new CliPrinter(commandLine.getOut(), commandLine.getErr()));
+		var printer = new CliPrinter(commandLine.getOut(), commandLine.getErr());
 
-		commandLine.addSubcommand("init", initCommand);
+		registerBaseCommands(commandLine, printer);
 
-		// Allow `datagit init` and help/version output to run before a project has been
-		// initialized. Every other command depends on values from .datagit/config.yml.
-		if (Files.exists(CONFIG_PATH)) {
-			registerConfiguredCommands(commandLine);
-		} else if (requiresConfig(args)) {
-			throw new IllegalStateException("Missing .datagit/config.yml. Run `datagit init` first.");
+		if (requiresConfig(args)) {
+			var config = bootstrap();
+			registerConfiguredCommands(commandLine, config, printer);
 		}
 
 		// Register handlers after the full command tree is in place.
@@ -71,36 +66,41 @@ public class Main {
 		System.exit(exitCode);
 	}
 
-	private static void registerConfiguredCommands(CommandLine commandLine) {
-		String databaseType = getYamlConfigValueFromKey("database.type");
-		if (!"postgres".equalsIgnoreCase(databaseType)) {
-			throw new IllegalStateException("Unsupported database.type: " + databaseType);
-		}
+	private static void registerBaseCommands(CommandLine commandLine, CliPrinter printer) {
+		var initService = new InitService(printer);
+		var initCommand = new InitCommand(initService, printer);
+
+		commandLine.addSubcommand("init", initCommand);
+	}
+
+	private static void registerConfiguredCommands(CommandLine commandLine, DataGitConfig config, CliPrinter printer) {
+		var databaseConfig = config.getDatabaseConfig();
+		var storageConfig = config.getStorageConfig();
 
 		var dataSource = new DriverManagerDataSource();
 		dataSource.setUrl(String.format(
 				"jdbc:postgresql://%s:%s/%s",
-				getYamlConfigValueFromKey("database.host"),
-				getYamlConfigValueFromKey("database.port"),
-				getYamlConfigValueFromKey("database.name")));
-		dataSource.setUsername(getYamlConfigValueFromKey("database.username"));
-		dataSource.setPassword(getYamlConfigValueFromKey("database.password"));
+				databaseConfig.getHost(),
+				databaseConfig.getPort(),
+				databaseConfig.getName()));
+		dataSource.setUsername(databaseConfig.getUsername());
+		dataSource.setPassword(databaseConfig.getPassword());
 
 		JdbcTemplate jdbc = new JdbcTemplate(dataSource);
 		var adapter = new PostgresAdapter(jdbc);
 
 		// Resolve relative storage paths from the project root so the YAML can stay
 		// portable, but the storage implementation still gets an absolute path.
-		var storage = new FileSystemSnapshotStorage(resolvePath(getYamlConfigValueFromKey("storage.path")).toString());
+		var storage = new FileSystemSnapshotStorage(resolvePath(storageConfig.getPath()).toString());
+
 		var snapshotService = new SnapshotService(adapter, storage);
 		var diffService = new DiffService();
 		var resolver = new ReferenceResolver(storage);
 		var compareSnapshotUseCase = new CompareSnapshotUseCase(resolver, diffService);
 		var statusService = new StatusService(adapter, resolver, diffService);
 
-		var printer = new CliPrinter(commandLine.getOut(), commandLine.getErr());
 		var objMapper = new ObjectMapper();
-		var jsonDiffRenderer = new JsonDIffRenderer(printer, objMapper);
+		var jsonDiffRenderer = new JsonDiffRenderer(printer, objMapper);
 		var textDiffRenderer = new TextDiffRenderer(printer);
 		var logCliRenderer = new LogCliRenderer(printer);
 
@@ -109,6 +109,19 @@ public class Main {
 				new DiffCommand(compareSnapshotUseCase, jsonDiffRenderer, textDiffRenderer));
 		commandLine.addSubcommand("log", new LogCommand(storage, logCliRenderer));
 		commandLine.addSubcommand("status", new StatusCommand(textDiffRenderer, statusService, printer));
+	}
+
+	private static DataGitConfig bootstrap() {
+		var projectLocator = new ProjectLocator();
+		projectLocator.validateProjectInitialized();
+
+		var configLoader = new ConfigLoader(new ObjectMapper(new YAMLFactory()));
+		var config = configLoader.load(projectLocator.getConfigFile());
+
+		var configValidator = new ConfigValidator();
+		configValidator.validateConfig(config);
+
+		return config;
 	}
 
 	private static boolean requiresConfig(String[] args) {
@@ -126,33 +139,5 @@ public class Main {
 	private static Path resolvePath(String configuredPath) {
 		Path path = Path.of(configuredPath);
 		return path.isAbsolute() ? path : ROOT.resolve(path).normalize();
-	}
-
-	private static String getYamlConfigValueFromKey(String key) {
-		Yaml yaml = new Yaml();
-
-		try (InputStream inputStream = Files.newInputStream(CONFIG_PATH)) {
-			Map<String, Object> configMap = yaml.load(inputStream);
-			if (configMap == null) {
-				throw new IllegalStateException("Configuration file is empty: " + CONFIG_PATH);
-			}
-
-			Object currentValue = configMap;
-			// Support dotted keys like `storage.path` by walking nested YAML maps one
-			// segment at a time.
-			for (String keyPart : key.split("\\.")) {
-				if (!(currentValue instanceof Map<?, ?> currentMap)) {
-					throw new IllegalStateException("Config key does not point to a scalar value: " + key);
-				}
-				// Checks if
-				currentValue = currentMap.get(keyPart);
-				if (currentValue == null) {
-					throw new IllegalStateException("Missing config key: " + key);
-				}
-			}
-			return currentValue.toString();
-		} catch (IOException e) {
-			throw new IllegalStateException("Failed to read configuration file: " + CONFIG_PATH, e);
-		}
 	}
 }

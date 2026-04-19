@@ -10,7 +10,7 @@ import com.lukete.datagit.core.exception.DiffRenderingException;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class JsonDIffRenderer implements DiffRenderer {
+public class JsonDiffRenderer implements DiffRenderer {
     private final CliPrinter printer;
     private final ObjectMapper objectMapper;
 
