@@ -16,6 +16,7 @@ import com.lukete.datagit.cli.command.DiffCommand;
 import com.lukete.datagit.cli.command.InitCommand;
 import com.lukete.datagit.cli.command.LogCommand;
 import com.lukete.datagit.cli.command.SnapshotCommand;
+import com.lukete.datagit.cli.command.StatusCommand;
 import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.cli.output.JsonDIffRenderer;
 import com.lukete.datagit.cli.output.LogCliRenderer;
@@ -27,6 +28,7 @@ import com.lukete.datagit.core.service.DiffService;
 import com.lukete.datagit.core.service.InitService;
 import com.lukete.datagit.core.service.ReferenceResolver;
 import com.lukete.datagit.core.service.SnapshotService;
+import com.lukete.datagit.core.service.StatusService;
 import com.lukete.datagit.core.usecase.CompareSnapshotUseCase;
 import com.lukete.datagit.storage.filesystem.FileSystemSnapshotStorage;
 
@@ -94,6 +96,7 @@ public class Main {
 		var diffService = new DiffService();
 		var resolver = new ReferenceResolver(storage);
 		var compareSnapshotUseCase = new CompareSnapshotUseCase(resolver, diffService);
+		var statusService = new StatusService(adapter, resolver, diffService);
 
 		var printer = new CliPrinter(commandLine.getOut(), commandLine.getErr());
 		var objMapper = new ObjectMapper();
@@ -105,6 +108,7 @@ public class Main {
 		commandLine.addSubcommand("diff",
 				new DiffCommand(compareSnapshotUseCase, jsonDiffRenderer, textDiffRenderer));
 		commandLine.addSubcommand("log", new LogCommand(storage, logCliRenderer));
+		commandLine.addSubcommand("status", new StatusCommand(textDiffRenderer, statusService, printer));
 	}
 
 	private static boolean requiresConfig(String[] args) {
