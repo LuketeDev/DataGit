@@ -6,13 +6,23 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import com.lukete.datagit.config.domain.DataGitConfig;
+import com.lukete.datagit.config.domain.SnapshotConfig;
 import com.lukete.datagit.core.domain.DiffResult;
 import com.lukete.datagit.core.domain.Snapshot;
 
-public class DiffServiceTest {
-        private final DiffService diffService = new DiffService();
+class DiffServiceTest {
+        private final DiffService diffService = new DiffService(new SnapshotNormalizer(), createConfig());
+
+        private static DataGitConfig createConfig() {
+                DataGitConfig config = new DataGitConfig();
+                SnapshotConfig snapshotConfig = new SnapshotConfig();
+                snapshotConfig.setIgnoredColumns(List.of());
+                config.setSnapshotConfig(snapshotConfig);
+                return config;
+        }
 
         @Test
         void should_detect_inserted_rows() {
@@ -86,8 +96,7 @@ public class DiffServiceTest {
                                 Instant.now(),
                                 "postgres",
                                 Map.of(
-                                                "users", List.of(
-                                                                Map.of("id", 1, "name", "luquinhas"))));
+                                                "users", List.of()));
 
                 DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
 

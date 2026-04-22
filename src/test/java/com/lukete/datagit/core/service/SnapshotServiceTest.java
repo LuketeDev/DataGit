@@ -6,20 +6,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
+import com.lukete.datagit.config.domain.DataGitConfig;
+import com.lukete.datagit.config.domain.SnapshotConfig;
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 import com.lukete.datagit.core.ports.SnapshotStorage;
 
-public class SnapshotServiceTest {
+class SnapshotServiceTest {
+
+    private static DataGitConfig createConfig() {
+        DataGitConfig config = new DataGitConfig();
+        SnapshotConfig snapshotConfig = new SnapshotConfig();
+        snapshotConfig.setIgnoredColumns(List.of());
+        config.setSnapshotConfig(snapshotConfig);
+        return config;
+    }
 
     @Test
     void should_create_and_store_snapshot() {
         FakeAdapter fakeAdapter = new FakeAdapter();
         FakeStorage fakeStorage = new FakeStorage();
 
-        SnapshotService service = new SnapshotService(fakeAdapter, fakeStorage);
+        SnapshotService service = new SnapshotService(fakeAdapter, fakeStorage, new SnapshotNormalizer(),
+                createConfig());
         Snapshot created = service.createSnapshot();
 
         assertThat(created.id()).isNotBlank();
