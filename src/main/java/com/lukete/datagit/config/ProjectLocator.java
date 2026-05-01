@@ -20,11 +20,11 @@ public class ProjectLocator {
     }
 
     public Path getConfigFile() {
-        return getWorkingDirectory().resolve(CONFIG_FILE_NAME);
+        return getDataGitDirectory().resolve(CONFIG_FILE_NAME);
     }
 
     public Path getSnapshotsDirectory() {
-        return getWorkingDirectory().resolve(SNAPSHOTS_DIRECTORY_NAME);
+        return getDataGitDirectory().resolve(SNAPSHOTS_DIRECTORY_NAME);
     }
 
     public void validateProjectInitialized() {
