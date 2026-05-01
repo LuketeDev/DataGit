@@ -1,5 +1,8 @@
 package com.lukete.datagit.core.service;
 
+import java.time.Instant;
+import java.util.UUID;
+
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
@@ -26,8 +29,17 @@ public class SnapshotService {
     public Snapshot createSnapshot() {
         Snapshot rawSnapshot = adapter.extract();
         Snapshot normalizedSnapshot = normalizer.normalize(rawSnapshot, config.getSnapshotConfig().getIgnoredColumns());
+        Snapshot snapshot = enrichSnapshot(normalizedSnapshot);
 
-        storage.save(normalizedSnapshot);
-        return normalizedSnapshot;
+        storage.save(snapshot);
+        return snapshot;
+    }
+
+    private Snapshot enrichSnapshot(Snapshot snapshot) {
+        return new Snapshot(
+                snapshot.id() == null || snapshot.id().isBlank() ? UUID.randomUUID().toString() : snapshot.id(),
+                snapshot.timestamp() == null ? Instant.now() : snapshot.timestamp(),
+                snapshot.source(),
+                snapshot.tables());
     }
 }
