@@ -35,7 +35,7 @@ class SnapshotServiceTest {
 
         assertThat(created.id()).isNotBlank();
         assertThat(created.timestamp()).isNotNull();
-        assertThat(created.source()).isEqualTo("posgtres");
+        assertThat(created.source()).isEqualTo("postgres");
         assertThat(fakeStorage.savedSnapshot).isNotNull();
         assertThat(fakeStorage.savedSnapshot.id()).isEqualTo(created.id());
     }
