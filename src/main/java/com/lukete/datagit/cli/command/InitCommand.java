@@ -25,8 +25,10 @@ public class InitCommand implements Runnable {
      */
     @Override
     public void run() {
-        initService.setupConfig(parent.isVerbose());
-        printer.success("[v] DataGit initialized succesfully.");
-        printer.success("[v] Created .datagit/ directory.");
+        initService.setupConfig();
+
+        printer.success("DataGit initialized successfully.");
+        printer.info("Created .datagit/ directory.");
+        printer.hint("Edit .datagit/config.yml and run `datagit snapshot`.");
     }
 }

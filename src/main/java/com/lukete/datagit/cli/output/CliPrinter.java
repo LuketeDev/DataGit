@@ -3,15 +3,16 @@ package com.lukete.datagit.cli.output;
 import java.io.PrintWriter;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @RequiredArgsConstructor
+@Slf4j
 public class CliPrinter {
     private final PrintWriter out;
     private final PrintWriter err;
 
     public void print(MessageStyle style, String message) {
-        String line = style.label() + "  " + message;
-
+        String line = String.format("%-8s%s", style.label(), message);
         if (style == MessageStyle.ERROR || style == MessageStyle.WARNING) {
             err.println(line);
             return;

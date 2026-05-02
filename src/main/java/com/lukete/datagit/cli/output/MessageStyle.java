@@ -13,11 +13,11 @@ public enum MessageStyle {
      * ERROR...TEXT
      * TIP.....TEXT
      */
-    SUCCESS("OK    "),
-    INFO("INFO  "),
-    WARNING("WARN  "),
-    ERROR("ERROR "),
-    HINT("TIP   ");
+    SUCCESS("OK"),
+    INFO("INFO"),
+    WARNING("WARN"),
+    ERROR("ERROR"),
+    HINT("TIP");
 
     private final String label;
 

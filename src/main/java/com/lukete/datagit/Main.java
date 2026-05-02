@@ -32,8 +32,9 @@ public class Main {
 		var root = new DataGitCommand();
 		var commandLine = new CommandLine(root);
 		var printer = new CliPrinter(commandLine.getOut(), commandLine.getErr());
+		root.setPrinter(printer);
 		var contextProvider = new DataGitContextProvider();
-		var initService = new InitService(printer);
+		var initService = new InitService();
 		var objMapper = new ObjectMapper();
 		var jsonDiffRenderer = new JsonDiffRenderer(printer, objMapper);
 		var textDiffRenderer = new TextDiffRenderer(printer);
