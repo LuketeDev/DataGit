@@ -32,6 +32,18 @@ public class DataGitContext {
         @Getter
         private final ReferenceResolver referenceResolver;
 
+        public DataGitContext(ReferenceResolver referenceResolver, RestoreService restoreService) {
+                this.adapter = null;
+                this.snapshotNormalizer = null;
+                this.storage = null;
+                this.config = null;
+                this.snapshotService = null;
+                this.diffService = null;
+                this.statusService = null;
+                this.referenceResolver = referenceResolver;
+                this.restoreService = restoreService;
+        }
+
         public DataGitContext(DataGitConfig config) {
                 this.config = config;
 

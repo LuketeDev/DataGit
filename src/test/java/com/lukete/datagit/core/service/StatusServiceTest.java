@@ -24,9 +24,9 @@ class StatusServiceTest {
         storage.save(snapshot("head", List.of(
                 Map.of("id", 1, "name", "before"),
                 Map.of("id", 2, "name", "deleted"))));
-        DataSourceAdapter adapter = () -> snapshot("current", List.of(
+        DataSourceAdapter adapter = new ExtractingAdapter(snapshot("current", List.of(
                 Map.of("id", 1, "name", "after"),
-                Map.of("id", 3, "name", "inserted")));
+                Map.of("id", 3, "name", "inserted"))));
 
         StatusService service = new StatusService(
                 adapter,
@@ -49,7 +49,8 @@ class StatusServiceTest {
         CountingStorage storage = new CountingStorage();
         storage.save(snapshot("head", List.of(Map.of("id", 1, "name", "same"))));
         int saveCountAfterSetup = storage.saveCount;
-        DataSourceAdapter adapter = () -> snapshot("current", List.of(Map.of("id", 1, "name", "same")));
+        DataSourceAdapter adapter = new ExtractingAdapter(
+                snapshot("current", List.of(Map.of("id", 1, "name", "same"))));
 
         StatusService service = new StatusService(
                 adapter,
@@ -97,6 +98,23 @@ class StatusServiceTest {
         @Override
         public List<Snapshot> list() {
             return List.copyOf(snapshots);
+        }
+    }
+
+    private static class ExtractingAdapter implements DataSourceAdapter {
+        private final Snapshot snapshot;
+
+        private ExtractingAdapter(Snapshot snapshot) {
+            this.snapshot = snapshot;
+        }
+
+        @Override
+        public Snapshot extract() {
+            return snapshot;
+        }
+
+        @Override
+        public void restore(Snapshot snapshot) {
         }
     }
 }

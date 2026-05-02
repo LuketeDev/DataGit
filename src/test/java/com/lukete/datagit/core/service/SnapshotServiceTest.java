@@ -93,6 +93,10 @@ class SnapshotServiceTest {
                     "postgres",
                     Map.of("users", rows));
         }
+
+        @Override
+        public void restore(Snapshot snapshot) {
+        }
     }
 
     private static class FakeStorage implements SnapshotStorage {

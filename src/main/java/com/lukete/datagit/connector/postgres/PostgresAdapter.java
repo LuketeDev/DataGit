@@ -1,10 +1,14 @@
 package com.lukete.datagit.connector.postgres;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.lukete.datagit.core.domain.Snapshot;
@@ -53,30 +57,38 @@ public class PostgresAdapter implements DataSourceAdapter {
 
     @Override
     public void restore(Snapshot snapshot) {
-        jdbc.execute("BEGIN");
-        try {
-            for (var tableEntry : snapshot.tables().entrySet()) {
-                String tableName = tableEntry.getKey();
-                List<Map<String, Object>> rows = tableEntry.getValue();
+        jdbc.execute((ConnectionCallback<Void>) connection -> {
+            boolean originalAutoCommit = connection.getAutoCommit();
+            connection.setAutoCommit(false);
+            try {
+                for (var tableEntry : snapshot.tables().entrySet()) {
+                    String tableName = tableEntry.getKey();
+                    List<Map<String, Object>> rows = tableEntry.getValue();
 
-                validateIdentifier(tableName);
+                    validateIdentifier(tableName);
 
-                jdbc.execute("DELETE FROM " + tableName);
+                    try (var statement = connection.createStatement()) {
+                        statement.executeUpdate("DELETE FROM " + tableName);
+                    }
 
-                for (Map<String, Object> row : rows) {
-                    insertRow(tableName, row);
+                    for (Map<String, Object> row : rows) {
+                        insertRow(connection, tableName, row);
+                    }
+
                 }
 
+                connection.commit();
+                return null;
+            } catch (Exception e) {
+                connection.rollback();
+                throw new RestoreFailedException("Failed to restore snapshot: " + snapshot.id(), e);
+            } finally {
+                connection.setAutoCommit(originalAutoCommit);
             }
-
-            jdbc.execute("COMMIT");
-        } catch (Exception e) {
-            jdbc.execute("ROLLBACK");
-            throw new RestoreFailedException("Failed to restore snapshot: " + snapshot.id(), e);
-        }
+        });
     }
 
-    private void insertRow(String tableName, Map<String, Object> row) {
+    private void insertRow(Connection connection, String tableName, Map<String, Object> row) throws SQLException {
         if (row == null || row.isEmpty()) {
             return;
         }
@@ -90,8 +102,14 @@ public class PostgresAdapter implements DataSourceAdapter {
 
         String sql = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + placeholders + ")";
 
-        jdbc.update(sql, row.values().toArray());
-
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            int index = 1;
+            for (Object value : row.values()) {
+                statement.setObject(index, value);
+                index++;
+            }
+            statement.executeUpdate();
+        }
     }
 
     private void validateIdentifier(String identifier) {
