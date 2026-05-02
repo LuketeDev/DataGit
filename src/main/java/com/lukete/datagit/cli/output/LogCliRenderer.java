@@ -22,7 +22,7 @@ public class LogCliRenderer {
     public void render(List<Snapshot> snapshots) {
         if (snapshots == null || snapshots.isEmpty()) {
             printer.info("No snapshots found.");
-            printer.hint("Run `datagit.snapshot` to create your first snapshot.");
+            printer.hint("Run `./datagit.sh snapshot` to create your first snapshot.");
             return;
         }
 
