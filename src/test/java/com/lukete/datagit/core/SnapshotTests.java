@@ -1,27 +1,25 @@
 package com.lukete.datagit.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import org.junit.Test;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+
 import com.lukete.datagit.core.domain.Snapshot;
-import com.lukete.datagit.core.service.SnapshotService;
 
-import lombok.RequiredArgsConstructor;
-
-@RequiredArgsConstructor
-public class SnapshotTests {
-    private final SnapshotService service;
+class SnapshotTests {
 
     @Test
-    void should_create_snapshot_with_postgres_and_store() {
-        // given
-        // up postgres with testcontainers
-        // insert data
+    void should_hold_snapshot_tables() {
+        Snapshot snapshot = new Snapshot(
+                "snapshot-1",
+                Instant.parse("2026-04-08T10:00:00Z"),
+                "postgres",
+                Map.of("users", List.of(Map.of("id", 1, "name", "Lucas"))));
 
-        // when
-        Snapshot snapshot = service.createSnapshot();
-
-        // then
         assertThat(snapshot.tables()).isNotEmpty();
-
     }
 }

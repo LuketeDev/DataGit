@@ -9,30 +9,87 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.exception.AmbiguousReferenceException;
+import com.lukete.datagit.core.exception.SnapshotNotFoundException;
 import com.lukete.datagit.core.exception.NoSnapshotsFoundException;
 import com.lukete.datagit.core.ports.SnapshotStorage;
 
-public class ReferenceResolverTest {
+class ReferenceResolverTest {
 
     @Test
-    void should_resolve_head_to_latest_snapshot() {
+    void shouldResolveHeadToLatestSnapshot() {
         InMemorySnapshotStorage storage = new InMemorySnapshotStorage();
-        storage.save(new Snapshot("id-1", Instant.parse("2026-04-08T10:00:00Z"), "postgres", Map.of()));
-        storage.save(new Snapshot("id-2", Instant.parse("2026-04-08T11:00:00Z"), "postgres", Map.of()));
+        storage.save(snapshot("id-1", "2026-04-08T10:00:00Z"));
+        storage.save(snapshot("id-2", "2026-04-08T11:00:00Z"));
 
-        ReferenceResolver resolver = new ReferenceResolver(storage);
-
-        Snapshot result = resolver.resolve("HEAD");
+        Snapshot result = new ReferenceResolver(storage).resolve("HEAD");
 
         assertThat(result.id()).isEqualTo("id-2");
     }
 
     @Test
-    void should_throw_when_no_snapshots_exist() {
+    void shouldResolveHeadOneToPreviousSnapshot() {
+        InMemorySnapshotStorage storage = storageWithThreeSnapshots();
+
+        Snapshot result = new ReferenceResolver(storage).resolve("HEAD~1");
+
+        assertThat(result.id()).isEqualTo("id-2");
+    }
+
+    @Test
+    void shouldResolveHeadTwoToOlderSnapshot() {
+        InMemorySnapshotStorage storage = storageWithThreeSnapshots();
+
+        Snapshot result = new ReferenceResolver(storage).resolve("HEAD~2");
+
+        assertThat(result.id()).isEqualTo("id-1");
+    }
+
+    @Test
+    void shouldResolveFullId() {
+        InMemorySnapshotStorage storage = storageWithThreeSnapshots();
+
+        Snapshot result = new ReferenceResolver(storage).resolve("id-2");
+
+        assertThat(result.id()).isEqualTo("id-2");
+    }
+
+    @Test
+    void shouldResolveShortUniqueId() {
+        InMemorySnapshotStorage storage = new InMemorySnapshotStorage();
+        storage.save(snapshot("90e47999-b235", "2026-04-08T10:00:00Z"));
+        storage.save(snapshot("abc12345-aaaa", "2026-04-08T11:00:00Z"));
+
+        Snapshot result = new ReferenceResolver(storage).resolve("90e4");
+
+        assertThat(result.id()).isEqualTo("90e47999-b235");
+    }
+
+    @Test
+    void shouldThrowWhenShortIdIsUnknown() {
+        InMemorySnapshotStorage storage = storageWithThreeSnapshots();
+
+        assertThatThrownBy(() -> new ReferenceResolver(storage).resolve("missing"))
+                .isInstanceOf(SnapshotNotFoundException.class);
+    }
+
+    @Test
+    void shouldThrowWhenShortIdIsAmbiguous() {
+        InMemorySnapshotStorage storage = new InMemorySnapshotStorage();
+        storage.save(snapshot("90e47999-b235", "2026-04-08T10:00:00Z"));
+        storage.save(snapshot("90e41234-aaaa", "2026-04-08T11:00:00Z"));
+        ReferenceResolver resolver = new ReferenceResolver(storage);
+
+        assertThatThrownBy(() -> resolver.resolve("90e4"))
+                .isInstanceOf(AmbiguousReferenceException.class);
+
+    }
+
+    @Test
+    void shouldThrowWhenNoSnapshotsExist() {
         InMemorySnapshotStorage storage = new InMemorySnapshotStorage();
         ReferenceResolver resolver = new ReferenceResolver(storage);
 
@@ -40,16 +97,16 @@ public class ReferenceResolverTest {
                 .isInstanceOf(NoSnapshotsFoundException.class);
     }
 
-    @Test
-    void should_throw_when_short_id_is_ambiguous() {
+    private static InMemorySnapshotStorage storageWithThreeSnapshots() {
         InMemorySnapshotStorage storage = new InMemorySnapshotStorage();
-        storage.save(new Snapshot("90e47999-b235", Instant.now(), "postgres", Map.of()));
-        storage.save(new Snapshot("90e41234-aaaa", Instant.now().plusSeconds(1), "postgres", Map.of()));
-        ReferenceResolver resolver = new ReferenceResolver(storage);
+        storage.save(snapshot("id-1", "2026-04-08T10:00:00Z"));
+        storage.save(snapshot("id-2", "2026-04-08T11:00:00Z"));
+        storage.save(snapshot("id-3", "2026-04-08T12:00:00Z"));
+        return storage;
+    }
 
-        assertThatThrownBy(() -> resolver.resolve("90e4"))
-                .isInstanceOf(AmbiguousReferenceException.class);
-
+    private static Snapshot snapshot(String id, String timestamp) {
+        return new Snapshot(id, Instant.parse(timestamp), "postgres", Map.of());
     }
 
     private static class InMemorySnapshotStorage implements SnapshotStorage {
