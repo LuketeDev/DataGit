@@ -11,8 +11,18 @@ public class ProjectLocator {
     private static final String CONFIG_FILE_NAME = "config.yml";
     private static final String SNAPSHOTS_DIRECTORY_NAME = "snapshots";
 
+    private final Path workingDirectory;
+
+    public ProjectLocator() {
+        this(Paths.get("").toAbsolutePath().normalize());
+    }
+
+    public ProjectLocator(Path workingDirectory) {
+        this.workingDirectory = workingDirectory.toAbsolutePath().normalize();
+    }
+
     public Path getWorkingDirectory() {
-        return Paths.get("").toAbsolutePath().normalize();
+        return workingDirectory;
     }
 
     public Path getDataGitDirectory() {
