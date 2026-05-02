@@ -53,7 +53,7 @@ public class ConfigValidator {
         // Just for the checks
         StorageType.from(storageConfig.getType());
 
-        requireNotBlank(storageConfig.getPath(), "storage.type");
+        requireNotBlank(storageConfig.getPath(), "storage.path");
     }
 
     private void validateSnapshot(SnapshotConfig snapshotConfig) {
