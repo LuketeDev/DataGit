@@ -14,4 +14,6 @@ public interface DataSourceAdapter {
      * @return a complete snapshot of the data source
      */
     Snapshot extract();
+
+    void restore(Snapshot snapshot);
 }

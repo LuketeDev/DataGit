@@ -47,4 +47,10 @@ public class PostgresAdapter implements DataSourceAdapter {
                 "postgres",
                 tables);
     }
+
+    @Override
+    public void restore(Snapshot snapshot) {
+        // TO-DO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'restore'");
+    }
 }
