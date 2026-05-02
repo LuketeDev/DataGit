@@ -17,7 +17,7 @@ public class InvalidReferenceException extends DataGitException {
     /**
      * Creates the exception for the provided invalid reference and cause.
      *
-     * @param ref the invalid snapshot reference
+     * @param ref   the invalid snapshot reference
      * @param cause the underlying cause
      */
     public InvalidReferenceException(String ref, Throwable cause) {

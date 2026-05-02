@@ -6,6 +6,7 @@ import com.lukete.datagit.cli.command.DataGitCommand;
 import com.lukete.datagit.cli.command.DiffCommand;
 import com.lukete.datagit.cli.command.InitCommand;
 import com.lukete.datagit.cli.command.LogCommand;
+import com.lukete.datagit.cli.command.RestoreCommand;
 import com.lukete.datagit.cli.command.SnapshotCommand;
 import com.lukete.datagit.cli.command.StatusCommand;
 import com.lukete.datagit.cli.output.CliPrinter;
@@ -41,12 +42,12 @@ public class Main {
 		var logCliRenderer = new LogCliRenderer(printer);
 
 		commandLine.addSubcommand("init", new InitCommand(initService, printer));
-
 		commandLine.addSubcommand("snapshot", new SnapshotCommand(contextProvider, printer));
 		commandLine.addSubcommand("diff",
 				new DiffCommand(contextProvider, jsonDiffRenderer, textDiffRenderer));
 		commandLine.addSubcommand("log", new LogCommand(contextProvider, logCliRenderer));
 		commandLine.addSubcommand("status", new StatusCommand(contextProvider, textDiffRenderer, printer));
+		commandLine.addSubcommand("checkout", new RestoreCommand(contextProvider, printer));
 
 		// Register handlers after the full command tree is in place.
 		commandLine.setExecutionExceptionHandler(new CliExecutionExceptionHandler(root));

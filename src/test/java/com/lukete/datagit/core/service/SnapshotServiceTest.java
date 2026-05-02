@@ -42,7 +42,8 @@ class SnapshotServiceTest {
         FakeAdapter fakeAdapter = new FakeAdapter(List.of(Map.of("id", 1, "name", "Lucas")));
         FakeStorage fakeStorage = new FakeStorage();
 
-        SnapshotService service = new SnapshotService(fakeAdapter, fakeStorage, new SnapshotNormalizer(), createConfig());
+        SnapshotService service = new SnapshotService(fakeAdapter, fakeStorage, new SnapshotNormalizer(),
+                createConfig());
         Snapshot created = service.createSnapshot();
 
         assertThat(created.source()).isEqualTo("postgres");

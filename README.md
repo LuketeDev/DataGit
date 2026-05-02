@@ -8,16 +8,28 @@ Inspired by [Git](https://github.com/git/git).
 
 ---
 
-## 📦 Installation (coming soon)
+## 📦 Installation
 
-Binary releases will be available in future versions.
+### From source
+
+```bash
+git clone https://github.com/LuketeDev/datagit.git
+cd datagit
+./gradlew build
+```
+
+### Run
+
+```bash
+./datagit.sh <command>
+```
 
 ---
 
 ## ✨ Features
 
-- 📸 Full-state database snapshot.
-- 🔍 Diff between snapshots separated by `inserted`, `updated`, `deleted`.
+- 📸 Full-state database snapshot, no schema required.
+- 🔍 Clear diff grouped by inserted, updated, deleted.
 - 📜 Log history with metadata.
 - 🧭 Snapshot IDs can be referenced using human-friendly tags like `HEAD`, `HEAD~1`, and short ID.
 - 🧪 Compare current state vs latest snapshot with `status` command.
@@ -31,8 +43,10 @@ Binary releases will be available in future versions.
 ### 1) Clone the project
 
 ```
+
 git clone https://github.com/LuketeDev/datagit.git
 cd datagit
+
 ```
 
 ### 2) Build
@@ -94,6 +108,7 @@ snapshot:
 
 # see changes of current database state vs latest snapshot
 ./datagit.sh status
+
 ```
 
 ---
@@ -101,11 +116,12 @@ snapshot:
 ## 🧩 Commands
 
 ```bash
-./datagit.sh init                # bootstraps the project by creating .datagit/
-./datagit.sh snapshot            # takes a snapshot of the current database state
-./datagit.sh log                 # lists all snapshots
-./datagit.sh diff <OLD> <NEW>    # compares two snapshots
-./datagit.sh status              # compares current database state vs latest snapshot
+./datagit.sh init                   # bootstraps the project by creating .datagit/
+./datagit.sh snapshot               # takes a snapshot of the current database state
+./datagit.sh log                    # lists all snapshots
+./datagit.sh diff <OLD> <NEW>       # compares two snapshots
+./datagit.sh status                 # compares current database state vs latest snapshot
+./datagit.sh checkout <REF> --yes   # restores database from snapshot
 ```
 
 ---
@@ -125,8 +141,7 @@ You can use the following as snapshot references in the `diff` command:
 Examples:
 
 ```bash
-./datagit.sh diff HEAD~1 HEAD
-./datagit.sh diff # Same as datagit diff HEAD~1 HEAD
+./datagit.sh diff     # defaults to HEAD~1 HEAD
 ```
 
 ---
@@ -149,6 +164,35 @@ Table: users
     - id=2 name=Jonas
 ```
 
+## Checkout / Restore
+
+> [!CAUTION]
+> This operation will overwrite current data and may cause data loss.
+> Always backup your database before running checkout.
+
+```bash
+# Restores table data from a snapshot.
+./datagit.sh checkout HEAD~1 --yes
+```
+
+### Expected output example:
+
+```bash
+WARN  This operation will overwrite current table data.
+INFO  Target snapshot: 90e47999
+INFO  Tables: 1
+
+OK    Database restored from snapshot: 90e47999
+```
+
+### Current limitations:
+
+- PostgreSQL only.
+- Does not restore schema.
+- Does not create or drop tables.
+- Clears and reinserts data for tables present in the snapshot.
+- Requires --yes to execute.
+
 ---
 
 ## ⚠️ Requirements
@@ -163,13 +207,12 @@ Table: users
 - Initial DB support: PostgreSQL.
 - Complete snapshot, no incremental optimization.
 - Assumes `id` column for rows diff.
-- No rollback yet.
 
 ---
 
 ## 🗺️ Roadmap
 
-- [ ] Rollback (`checkout`).
+- [x] Rollback (`checkout`).
 - [ ] More detailed diff by column.
 - [ ] Multiple databases support (MySQL, MongoDB, etc).
 - [ ] Remote storage support (S3/MinIO)
@@ -180,7 +223,7 @@ Table: users
 
 ## 🤝 Contributing
 
-Issues and pull requests are welcome.  
+Issues and pull requests are welcome.
 Open an issue describing your problem or a suggestion before bigger changes.
 
 ---
@@ -188,3 +231,7 @@ Open an issue describing your problem or a suggestion before bigger changes.
 ## 📄 License
 
 Licensed under the Apache 2.0 License.
+
+```
+
+```

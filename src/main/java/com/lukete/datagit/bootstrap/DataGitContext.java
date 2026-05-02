@@ -28,6 +28,8 @@ public class DataGitContext {
         @Getter
         private final StatusService statusService;
         @Getter
+        private final RestoreService restoreService;
+        @Getter
         private final ReferenceResolver referenceResolver;
 
         public DataGitContext(DataGitConfig config) {
@@ -69,6 +71,8 @@ public class DataGitContext {
                                 diffService,
                                 snapshotNormalizer,
                                 config);
+
+                this.restoreService = new RestoreService(adapter);
         }
 
         private String buildJdbcUrl(DataGitConfig config) {
