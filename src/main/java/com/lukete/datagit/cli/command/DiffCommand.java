@@ -22,7 +22,7 @@ public class DiffCommand implements Runnable {
     private String newId = "HEAD";
 
     @Option(names = {
-            "--format" }, defaultValue = "text", description = "Output format: ${COMPLETION-CANDIDATES}")
+            "--format" }, defaultValue = "TEXT", description = "Output format: ${COMPLETION-CANDIDATES}")
     private OutputFormat outputFormat;
 
     private final DataGitContextProvider contextProvider;
