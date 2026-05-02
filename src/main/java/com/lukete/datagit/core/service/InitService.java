@@ -45,7 +45,7 @@ public class InitService {
      */
     public void setupConfig(boolean isVerbose) {
         File rootDir = new File(".datagit");
-        File configFile = new File(".datagit/config.yaml");
+        File configFile = new File(".datagit/config.yml");
         File snapshotsDir = new File(".datagit/snapshots");
         ErrorRenderer renderer = new ErrorRenderer(printer);
         if (configFile.exists()) {

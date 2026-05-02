@@ -8,7 +8,7 @@ import com.lukete.datagit.config.exception.ProjectNotInitializedException;
 
 public class ProjectLocator {
     private static final String DATAGIT_DIRECTORY_NAME = ".datagit";
-    private static final String CONFIG_FILE_NAME = "config.yaml";
+    private static final String CONFIG_FILE_NAME = "config.yml";
     private static final String SNAPSHOTS_DIRECTORY_NAME = "snapshots";
 
     public Path getWorkingDirectory() {

@@ -1,7 +1,7 @@
 package com.lukete.datagit.cli.command;
 
+import com.lukete.datagit.bootstrap.DataGitContextProvider;
 import com.lukete.datagit.cli.output.LogCliRenderer;
-import com.lukete.datagit.core.ports.SnapshotStorage;
 
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine.Command;
@@ -13,7 +13,7 @@ import picocli.CommandLine.Command;
 @RequiredArgsConstructor
 public class LogCommand implements Runnable {
 
-    private final SnapshotStorage storage;
+    private final DataGitContextProvider contextProvider;
     private final LogCliRenderer renderer;
 
     /**
@@ -21,7 +21,8 @@ public class LogCommand implements Runnable {
      */
     @Override
     public void run() {
-        var snapshots = storage.list();
+        var context = contextProvider.get();
+        var snapshots = context.getStorage().list();
         renderer.render(snapshots);
     }
 }
