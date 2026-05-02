@@ -10,7 +10,7 @@ Inspired by [Git](https://github.com/git/git).
 
 ## 📦 Installation (coming soon)
 
-## Binary releases will be available in future versions.
+Binary releases will be available in future versions.
 
 ---
 
@@ -53,7 +53,7 @@ chmod +x datagit.sh
 #### Windows:
 
 ```bash
-./datagit.bat init
+datagit.bat init
 ```
 
 ### 4) Configure
@@ -172,7 +172,7 @@ Table: users
 - [ ] Rollback (`checkout`).
 - [ ] More detailed diff by column.
 - [ ] Multiple databases support (MySQL, MongoDB, etc).
-- [ ] Remote storage support (S3/MiniIO)
+- [ ] Remote storage support (S3/MinIO)
 - [ ] Incremental snapshots
 - [ ] UI for diff visualization
 
