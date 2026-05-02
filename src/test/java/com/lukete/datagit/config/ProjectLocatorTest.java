@@ -12,7 +12,7 @@ class ProjectLocatorTest {
     void should_resolve_config_and_snapshots_inside_datagit_directory() {
         ProjectLocator locator = new ProjectLocator();
 
-        assertThat(locator.getConfigFile()).endsWith(Path.of(".datagit", "config.yaml"));
+        assertThat(locator.getConfigFile()).endsWith(Path.of(".datagit", "config.yml"));
         assertThat(locator.getSnapshotsDirectory()).endsWith(Path.of(".datagit", "snapshots"));
     }
 }
