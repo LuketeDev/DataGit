@@ -15,6 +15,7 @@ public class TextDiffRenderer implements DiffRenderer {
     @Override
     public void render(String leftRef, String rightRef, DiffResult diffResult) {
         printer.info("Comparing " + leftRef + " -> " + rightRef);
+        printer.info("Comparing " + leftRef + " -> " + rightRef);
         printer.blankLine();
 
         if (diffResult == null || diffResult.tables() == null || diffResult.tables().isEmpty()) {

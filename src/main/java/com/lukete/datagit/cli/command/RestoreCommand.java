@@ -2,6 +2,8 @@ package com.lukete.datagit.cli.command;
 
 import com.lukete.datagit.bootstrap.DataGitContextProvider;
 import com.lukete.datagit.cli.output.CliPrinter;
+import com.lukete.datagit.cli.output.RestorePlanRenderer;
+import com.lukete.datagit.core.exception.InvalidCommandOptionsException;
 
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine.Command;
@@ -17,18 +19,31 @@ public class RestoreCommand implements Runnable {
     @Option(names = "--yes", description = "Confirm restore operation")
     private boolean yes;
 
+    @Option(names = "--dry-run", description = "Show restore plan without changing the database.")
+    private boolean dryRun;
+
     private final DataGitContextProvider contextProvider;
+    private final RestorePlanRenderer restorePlanRenderer;
     private final CliPrinter printer;
 
     @Override
     public void run() {
-        var context = contextProvider.get();
-        var snapshot = context.getReferenceResolver().resolve(ref);
+        if (yes && dryRun) {
+            throw new InvalidCommandOptionsException("Options --yes and --dry-run cannot be used together.");
+        }
 
-        printer.warn("This operation will overwrite current table data.");
-        printer.info("Target snapshot: " + snapshot.id());
-        printer.info("Source: " + snapshot.source());
-        printer.info("Tables: " + snapshot.tables().size());
+        var context = contextProvider.get();
+
+        var snapshot = context.getReferenceResolver().resolve(ref);
+        var plan = context.getRestorePlanner().plan(snapshot);
+
+        restorePlanRenderer.render(plan);
+
+        if (dryRun) {
+            printer.blankLine();
+            printer.success("Dry run completed. No changes were applied.");
+            return;
+        }
 
         if (!yes) {
             printer.blankLine();
@@ -37,6 +52,12 @@ public class RestoreCommand implements Runnable {
             return;
         }
 
+        printer.blankLine();
+        printer.info("Creating safety snapshot before restore...");
+        var safetySnapshot = context.getSnapshotService().createSnapshot();
+        printer.success("Safety snapshot created: " + safetySnapshot.id());
+        printer.info("HEAD now points to the safety snapshot.");
+        printer.hint("Run `datagit diff HEAD~1 HEAD` to see what was undone.");
         context.getRestoreService().restore(snapshot);
 
         printer.success("Database restored from snapshot: " + snapshot.id());

@@ -31,6 +31,8 @@ public class DataGitContext {
         private final RestoreService restoreService;
         @Getter
         private final ReferenceResolver referenceResolver;
+        @Getter
+        private final RestorePlanner restorePlanner;
 
         public DataGitContext(ReferenceResolver referenceResolver, RestoreService restoreService) {
                 this.adapter = null;
@@ -42,6 +44,7 @@ public class DataGitContext {
                 this.statusService = null;
                 this.referenceResolver = referenceResolver;
                 this.restoreService = restoreService;
+                this.restorePlanner = null;
         }
 
         public DataGitContext(DataGitConfig config) {
@@ -85,6 +88,7 @@ public class DataGitContext {
                                 config);
 
                 this.restoreService = new RestoreService(adapter);
+                this.restorePlanner = new RestorePlanner();
         }
 
         private String buildJdbcUrl(DataGitConfig config) {

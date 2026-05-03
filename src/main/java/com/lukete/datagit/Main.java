@@ -12,10 +12,12 @@ import com.lukete.datagit.cli.command.StatusCommand;
 import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.cli.output.JsonDiffRenderer;
 import com.lukete.datagit.cli.output.LogCliRenderer;
+import com.lukete.datagit.cli.output.RestorePlanRenderer;
 import com.lukete.datagit.cli.output.TextDiffRenderer;
 import com.lukete.datagit.core.exception.CliExecutionExceptionHandler;
 import com.lukete.datagit.core.exception.CliParameterExceptionHandler;
 import com.lukete.datagit.core.service.InitService;
+
 import picocli.CommandLine;
 
 /**
@@ -40,6 +42,7 @@ public class Main {
 		var jsonDiffRenderer = new JsonDiffRenderer(printer, objMapper);
 		var textDiffRenderer = new TextDiffRenderer(printer);
 		var logCliRenderer = new LogCliRenderer(printer);
+		var restorePlanRenderer = new RestorePlanRenderer(printer);
 
 		commandLine.addSubcommand("init", new InitCommand(initService, printer));
 		commandLine.addSubcommand("snapshot", new SnapshotCommand(contextProvider, printer));
@@ -47,7 +50,7 @@ public class Main {
 				new DiffCommand(contextProvider, jsonDiffRenderer, textDiffRenderer));
 		commandLine.addSubcommand("log", new LogCommand(contextProvider, logCliRenderer));
 		commandLine.addSubcommand("status", new StatusCommand(contextProvider, textDiffRenderer, printer));
-		commandLine.addSubcommand("checkout", new RestoreCommand(contextProvider, printer));
+		commandLine.addSubcommand("checkout", new RestoreCommand(contextProvider, restorePlanRenderer, printer));
 
 		// Register handlers after the full command tree is in place.
 		commandLine.setExecutionExceptionHandler(new CliExecutionExceptionHandler(root));
