@@ -5,10 +5,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.core.domain.DiffResult;
+import com.lukete.datagit.core.domain.FieldChange;
 import com.lukete.datagit.core.domain.RowChange;
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.domain.TableDiff;
@@ -85,19 +88,20 @@ public class DiffService {
 
             // Existed in old snapshot?
             if (!oldMap.containsKey(id)) {
-                inserted.add(new RowChange(null, newRow));
+                inserted.add(new RowChange(null, newRow, List.of()));
             } else {
                 Map<String, Object> oldRow = oldMap.get(id);
                 // Is new row different from self in old snapshot?
                 if (!oldRow.equals(newRow)) {
-                    updated.add(new RowChange(oldRow, newRow));
+                    List<FieldChange> fieldChanges = diffFields(oldRow, newRow);
+                    updated.add(new RowChange(oldRow, newRow, fieldChanges));
                 }
             }
         }
         for (var entry : oldMap.entrySet()) {
             Object id = entry.getKey();
             if (!newMap.containsKey(id)) {
-                deleted.add(new RowChange(entry.getValue(), null));
+                deleted.add(new RowChange(entry.getValue(), null, List.of()));
             }
         }
         return new TableDiff(deleted, inserted, updated);
@@ -122,5 +126,28 @@ public class DiffService {
         }
 
         return map;
+    }
+
+    private List<FieldChange> diffFields(Map<String, Object> oldRow, Map<String, Object> newRow) {
+        Set<String> fields = new TreeSet<>();
+        fields.addAll(oldRow.keySet());
+        fields.addAll(newRow.keySet());
+
+        List<FieldChange> changes = new ArrayList<>();
+
+        for (String field : fields) {
+            if ("id".equals(field)) {
+                continue;
+            }
+
+            Object oldValue = oldRow.get(field);
+            Object newValue = newRow.get(field);
+
+            if (!Objects.equals(oldValue, newValue)) {
+                changes.add(new FieldChange(field, oldValue, newValue));
+            }
+        }
+
+        return changes;
     }
 }

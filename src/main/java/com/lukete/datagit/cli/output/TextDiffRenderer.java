@@ -15,7 +15,6 @@ public class TextDiffRenderer implements DiffRenderer {
     @Override
     public void render(String leftRef, String rightRef, DiffResult diffResult) {
         printer.info("Comparing " + leftRef + " -> " + rightRef);
-        printer.info("Comparing " + leftRef + " -> " + rightRef);
         printer.blankLine();
 
         if (diffResult == null || diffResult.tables() == null || diffResult.tables().isEmpty()) {
@@ -60,23 +59,6 @@ public class TextDiffRenderer implements DiffRenderer {
         printer.blankLine();
     }
 
-    private void renderUpdated(TableDiff tableDiff) {
-        if (tableDiff.updated() == null || tableDiff.updated().isEmpty()) {
-            return;
-        }
-
-        printer.info("  ~ updated: " + tableDiff.updated().size());
-
-        for (RowChange change : tableDiff.updated()) {
-            Object id = extractId(change.before(), change.after());
-            printer.info("    ~ id=" + (id == null ? "?" : id));
-            printer.info("      before: " + renderRow(change.before()));
-            printer.info("      after:  " + renderRow(change.after()));
-        }
-
-        printer.blankLine();
-    }
-
     private void renderDeleted(TableDiff tableDiff) {
         if (tableDiff.deleted() == null || tableDiff.deleted().isEmpty()) {
             return;
@@ -86,6 +68,33 @@ public class TextDiffRenderer implements DiffRenderer {
 
         for (RowChange change : tableDiff.deleted()) {
             printer.info("    - " + summarizeRow(change.before()));
+        }
+
+        printer.blankLine();
+    }
+
+    private void renderUpdated(TableDiff tableDiff) {
+        if (tableDiff.updated() == null || tableDiff.updated().isEmpty()) {
+            return;
+        }
+
+        printer.info("  ~ updated: " + tableDiff.updated().size());
+
+        for (RowChange change : tableDiff.updated()) {
+            Object id = extractId(change);
+
+            printer.info("    ~ id=" + (id == null ? "?" : id));
+
+            for (var fieldChange : change.fieldChanges()) {
+
+                printer.info("      "
+                        + fieldChange.field()
+                        + ": "
+                        + fieldChange.before()
+                        + " -> "
+                        + fieldChange.after());
+
+            }
         }
 
         printer.blankLine();
@@ -109,27 +118,14 @@ public class TextDiffRenderer implements DiffRenderer {
                 .orElse("{}");
     }
 
-    private Object extractId(Map<String, Object> before, Map<String, Object> after) {
-        if (before != null && before.containsKey("id")) {
-            return before.get("id");
+    private Object extractId(RowChange change) {
+        if (change.before() != null && change.before().containsKey("id")) {
+            return change.before().get("id");
         }
-        if (after != null && after.containsKey("id")) {
-            return after.get("id");
+        if (change.after() != null && change.after().containsKey("id")) {
+            return change.after().get("id");
         }
 
         return null;
-    }
-
-    private String renderRow(Map<String, Object> row) {
-        if (row == null || row.isEmpty()) {
-            return "{}";
-        }
-
-        return row.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
-                .reduce((left, right) -> left + ", " + right)
-                .map(value -> "{" + value + "}")
-                .orElse("{}");
     }
 }
