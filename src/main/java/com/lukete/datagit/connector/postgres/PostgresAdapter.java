@@ -1,15 +1,17 @@
 package com.lukete.datagit.connector.postgres;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.exception.InvalidDatabaseIdentifierException;
@@ -24,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PostgresAdapter implements DataSourceAdapter {
     private final JdbcTemplate jdbc;
+    private final PlatformTransactionManager transactionManager;
 
     /**
      * Reads all tables from the {@code public} schema and builds a snapshot from
@@ -57,38 +60,36 @@ public class PostgresAdapter implements DataSourceAdapter {
 
     @Override
     public void restore(Snapshot snapshot) {
-        jdbc.execute((ConnectionCallback<Void>) connection -> {
-            boolean originalAutoCommit = connection.getAutoCommit();
-            connection.setAutoCommit(false);
+        var tables = snapshot.tables();
+        var tableNames = tables.keySet();
+
+        tableNames.forEach(this::validateIdentifier);
+
+        Map<String, Set<String>> dependencies = loadForeignKeyDependencies(tableNames);
+        List<String> insertOrder = sortForInsert(dependencies);
+        List<String> deleteOrder = sortForDelete(insertOrder);
+
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+
+        transactionTemplate.executeWithoutResult(status -> {
             try {
-                for (var tableEntry : snapshot.tables().entrySet()) {
-                    String tableName = tableEntry.getKey();
-                    List<Map<String, Object>> rows = tableEntry.getValue();
-
-                    validateIdentifier(tableName);
-
-                    try (var statement = connection.createStatement()) {
-                        statement.executeUpdate("DELETE FROM " + tableName);
-                    }
-
-                    for (Map<String, Object> row : rows) {
-                        insertRow(connection, tableName, row);
-                    }
-
+                for (String tableName : deleteOrder) {
+                    jdbc.update("DELETE FROM " + tableName);
                 }
 
-                connection.commit();
-                return null;
+                for (String tableName : insertOrder) {
+                    List<Map<String, Object>> rows = tables.getOrDefault(tableName, List.of());
+                    for (Map<String, Object> row : rows) {
+                        insertRow(tableName, row);
+                    }
+                }
             } catch (Exception e) {
-                connection.rollback();
                 throw new RestoreFailedException("Failed to restore snapshot: " + snapshot.id(), e);
-            } finally {
-                connection.setAutoCommit(originalAutoCommit);
             }
         });
     }
 
-    private void insertRow(Connection connection, String tableName, Map<String, Object> row) throws SQLException {
+    private void insertRow(String tableName, Map<String, Object> row) {
         if (row == null || row.isEmpty()) {
             return;
         }
@@ -102,19 +103,143 @@ public class PostgresAdapter implements DataSourceAdapter {
 
         String sql = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + placeholders + ")";
 
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            int index = 1;
-            for (Object value : row.values()) {
-                statement.setObject(index, value);
-                index++;
-            }
-            statement.executeUpdate();
-        }
+        jdbc.update(sql, row.values().toArray());
     }
 
     private void validateIdentifier(String identifier) {
         if (identifier == null || !identifier.matches("[a-zA-Z_]\\w*")) {
             throw new InvalidDatabaseIdentifierException("Invalid database identifier: " + identifier);
         }
+    }
+
+    /**
+     * This function was created when {@code datagit checkout} returned an exception
+     * because of update/delete violating fk constraints.
+     * 
+     * This function loads all the dependencies of a foreign key to be
+     * updated/deleted before updating/deleting the dependant.
+     * 
+     * @param snapshotTables
+     * @return
+     *
+     */
+    private Map<String, Set<String>> loadForeignKeyDependencies(Set<String> snapshotTables) {
+        /*
+         * SELECT:
+         * - child.relname: the name of the table containing the foreign key.
+         * - parent.relname: the table referenced by the foreign key.
+         * - AS child_table and AS parent_table: rename the columns in SELECT result.
+         * FROM:
+         * - pg_constraint: PostgreSQL internal table containing all constraints.
+         * - c: alias for the constraints.
+         * JOIN pg_class child...:
+         * - pg_class: contains information about tables.
+         * - child: alias for the child table.
+         * - c.conrelid: OID of the table that has the constraint.
+         * - This JOIN connects the constraint to the table containing it.
+         * JOIN pg_class parent...:
+         * - pg_class: contains informations about tables.
+         * - parent: alias for the referenced table.
+         * - c.confrelid: OID of the table referenced by the foreign key.
+         * - This JOIN finds the parent table
+         * JOIN pg_namespace...:
+         * - pg_namespace: stores db schemas
+         * - child.relnamespace: points to which schema the child table is contained.
+         * - This JOIN allows filtering by schema later.
+         * WHERE c.contype = 'f': gets only fk constraints
+         * AND n.nspname = 'public': only in the 'public' schema
+         * 
+         * The following query returns:
+         * All the fk relations in the 'public' schema, showing which child_table
+         * references which parent_table.
+         */
+        String sql = """
+                SELECT
+                    child.relname AS child_table,
+                    parent.relname AS parent_table
+                FROM pg_constraint c
+                JOIN pg_class child ON child.oid = c.conrelid
+                JOIN pg_class parent ON parent.oid = c.confrelid
+                JOIN pg_namespace n ON n.oid = child.relnamespace
+                WHERE c.contype = 'f'
+                    AND n.nspname = 'public'
+                        """;
+
+        // Map<table name, Set<name of dependant tables>>
+        Map<String, Set<String>> dependencies = new HashMap<>();
+
+        /*
+         * Creates an empty map to all snapshot tables.
+         * For example:
+         * users -> empty HashSet
+         * products -> empty HashShet
+         */
+        for (String table : snapshotTables) {
+            dependencies.put(table, new HashSet<>());
+        }
+
+        /*
+         * Executes the query, which returns something like:
+         * child_table | parent_table
+         * ------------|-------------
+         * customers---|-stores------
+         * orders------|-customers---
+         * order_items-|-orders------
+         */
+        jdbc.query(sql, rs -> {
+            String child = rs.getString("child_table");
+            String parent = rs.getString("parent_table");
+
+            // Applies only to tables in the snapshot and fills the map accordingly.
+            if (snapshotTables.contains(child) && snapshotTables.contains(parent)) {
+                // Adds parent (dependency) to child (dependant)
+                dependencies.get(child).add(parent);
+            }
+        });
+
+        return dependencies;
+    }
+
+    private List<String> sortForInsert(Map<String, Set<String>> dependencies) {
+        List<String> sorted = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        Set<String> visiting = new HashSet<>();
+
+        for (String table : dependencies.keySet()) {
+            visit(table, dependencies, visited, visiting, sorted);
+        }
+
+        return sorted;
+    }
+
+    private List<String> sortForDelete(List<String> insertOrder) {
+        List<String> deleteOrder = new ArrayList<>(insertOrder);
+        Collections.reverse(deleteOrder);
+        return deleteOrder;
+    }
+
+    private void visit(
+            String table,
+            Map<String, Set<String>> dependencies,
+            Set<String> visited,
+            Set<String> visiting,
+            List<String> sorted) {
+        if (visited.contains(table)) {
+            return;
+        }
+
+        if (visiting.contains(table)) {
+            throw new RestoreFailedException("Cyclic foreign key dependency involving table: " + table);
+        }
+
+        visiting.add(table);
+
+        for (String parent : dependencies.getOrDefault(table, Set.of())) {
+            visit(parent, dependencies, visited, visiting, sorted);
+        }
+
+        visiting.remove(table);
+        visited.add(table);
+        sorted.add(table);
     }
 }

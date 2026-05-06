@@ -10,6 +10,7 @@ import com.lukete.datagit.storage.filesystem.FileSystemSnapshotStorage;
 import lombok.Getter;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class DataGitContext {
@@ -33,6 +34,8 @@ public class DataGitContext {
         private final ReferenceResolver referenceResolver;
         @Getter
         private final RestorePlanner restorePlanner;
+        @Getter
+        private final DataSourceTransactionManager dataSourceTransactionManager;
 
         public DataGitContext(ReferenceResolver referenceResolver, RestoreService restoreService) {
                 this.adapter = null;
@@ -45,9 +48,11 @@ public class DataGitContext {
                 this.referenceResolver = referenceResolver;
                 this.restoreService = restoreService;
                 this.restorePlanner = null;
+                this.dataSourceTransactionManager = null;
         }
 
-        public DataGitContext(DataGitConfig config) {
+        public DataGitContext(DataGitConfig config, JdbcTemplate jdbcTemplate,
+                        DataSourceTransactionManager dataSourceTransactionManager) {
                 this.config = config;
 
                 // --- datasource
@@ -56,10 +61,8 @@ public class DataGitContext {
                 dataSource.setUsername(config.getDatabaseConfig().getUsername());
                 dataSource.setPassword(config.getDatabaseConfig().getPassword());
 
-                var jdbcTemplate = new JdbcTemplate(dataSource);
-
                 // adapter
-                this.adapter = new PostgresAdapter(jdbcTemplate);
+                this.adapter = new PostgresAdapter(jdbcTemplate, dataSourceTransactionManager);
 
                 // storage
                 this.storage = new FileSystemSnapshotStorage(
@@ -89,6 +92,7 @@ public class DataGitContext {
 
                 this.restoreService = new RestoreService(adapter);
                 this.restorePlanner = new RestorePlanner();
+                this.dataSourceTransactionManager = dataSourceTransactionManager;
         }
 
         private String buildJdbcUrl(DataGitConfig config) {
