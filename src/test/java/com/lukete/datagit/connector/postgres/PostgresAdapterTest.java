@@ -24,6 +24,7 @@ import com.lukete.datagit.core.exception.RestoreFailedException;
 
 @Testcontainers
 class PostgresAdapterTest {
+        private static final DataSource DATA_SOURCE = dataSource();
 
         @Container
         static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
@@ -115,11 +116,56 @@ class PostgresAdapterTest {
 
                 assertThatThrownBy(() -> adapter(jdbc).restore(snapshot(Map.of(
                                 "bad-table", List.of(row("id", 1))))))
-                                .isInstanceOf(InvalidDatabaseIdentifierException.class);
+                                .isInstanceOf(RestoreFailedException.class)
+                                .hasCauseInstanceOf(InvalidDatabaseIdentifierException.class);
+
+        }
+
+        @Test
+        void shouldRestoreTablesRespectingForeignKeyOrder() {
+                JdbcTemplate jdbc = jdbc();
+
+                jdbc.execute("DROP TABLE IF EXISTS customers");
+                jdbc.execute("DROP TABLE IF EXISTS tenants");
+
+                jdbc.execute("""
+                                    CREATE TABLE tenants (
+                                        id INT PRIMARY KEY,
+                                        name TEXT
+                                    )
+                                """);
+
+                jdbc.execute("""
+                                    CREATE TABLE customers (
+                                        id INT PRIMARY KEY,
+                                        tenant_id INT NOT NULL REFERENCES tenants(id),
+                                        name TEXT
+                                    )
+                                """);
+
+                jdbc.update("INSERT INTO tenants (id, name) VALUES (1, 'Current Tenant')");
+                jdbc.update("INSERT INTO customers (id, tenant_id, name) VALUES (10, 1, 'Current Customer')");
+
+                Snapshot snapshot = snapshot(Map.of(
+                                "tenants", List.of(
+                                                row("id", 2, "name", "Restored Tenant")),
+                                "customers", List.of(
+                                                row("id", 20, "tenant_id", 2, "name", "Restored Customer"))));
+
+                adapter(jdbc).restore(snapshot);
+
+                assertThat(
+                                jdbc.queryForList("SELECT id, name FROM tenants ORDER BY id")).containsExactly(
+                                                row("id", 2, "name", "Restored Tenant"));
+
+                assertThat(
+                                jdbc.queryForList("SELECT id, tenant_id, name FROM customers ORDER BY id"))
+                                .containsExactly(
+                                                row("id", 20, "tenant_id", 2, "name", "Restored Customer"));
         }
 
         private static JdbcTemplate jdbc() {
-                return new JdbcTemplate(dataSource());
+                return new JdbcTemplate(DATA_SOURCE);
         }
 
         private static PostgresAdapter adapter(JdbcTemplate jdbc) {
