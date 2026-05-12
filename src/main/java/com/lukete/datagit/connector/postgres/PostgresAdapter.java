@@ -1,5 +1,6 @@
 package com.lukete.datagit.connector.postgres;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -60,19 +62,19 @@ public class PostgresAdapter implements DataSourceAdapter {
 
     @Override
     public void restore(Snapshot snapshot) {
-        var tables = snapshot.tables();
-        var tableNames = tables.keySet();
+        try {
+            var tables = snapshot.tables();
+            var tableNames = tables.keySet();
 
-        tableNames.forEach(this::validateIdentifier);
+            tableNames.forEach(this::validateIdentifier);
 
-        Map<String, Set<String>> dependencies = loadForeignKeyDependencies(tableNames);
-        List<String> insertOrder = sortForInsert(dependencies);
-        List<String> deleteOrder = sortForDelete(insertOrder);
+            Map<String, Set<String>> dependencies = loadForeignKeyDependencies(tableNames);
+            List<String> insertOrder = sortForInsert(dependencies);
+            List<String> deleteOrder = sortForDelete(insertOrder);
 
-        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+            TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
 
-        transactionTemplate.executeWithoutResult(status -> {
-            try {
+            transactionTemplate.executeWithoutResult(status -> {
                 for (String tableName : deleteOrder) {
                     jdbc.update("DELETE FROM " + tableName);
                 }
@@ -83,10 +85,12 @@ public class PostgresAdapter implements DataSourceAdapter {
                         insertRow(tableName, row);
                     }
                 }
-            } catch (Exception e) {
-                throw new RestoreFailedException("Failed to restore snapshot: " + snapshot.id(), e);
-            }
-        });
+            });
+        } catch (RestoreFailedException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RestoreFailedException("Failed to restore snapshot: " + snapshot.id(), e);
+        }
     }
 
     private void insertRow(String tableName, Map<String, Object> row) {
@@ -103,7 +107,27 @@ public class PostgresAdapter implements DataSourceAdapter {
 
         String sql = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + placeholders + ")";
 
-        jdbc.update(sql, row.values().toArray());
+        Object[] values = row.values().stream()
+                .map(this::restoreValue)
+                .toArray();
+
+        jdbc.update(sql, values);
+    }
+
+    private Object restoreValue(Object value) {
+        if (value instanceof Map<?, ?> typedValue && typedValue.containsKey("type")
+                && typedValue.containsKey("value") && typedValue.containsKey("null")) {
+            if (Boolean.TRUE.equals(typedValue.get("null"))) {
+                return null;
+            }
+
+            Object type = typedValue.get("type");
+            if ("json".equals(type) || "jsonb".equals(type)) {
+                return new SqlParameterValue(Types.OTHER, typedValue.get("value"));
+            }
+        }
+
+        return value;
     }
 
     private void validateIdentifier(String identifier) {

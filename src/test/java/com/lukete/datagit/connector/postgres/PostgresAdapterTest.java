@@ -4,7 +4,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
-import javax.sql.DataSource;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,8 +23,6 @@ import com.lukete.datagit.core.exception.RestoreFailedException;
 
 @Testcontainers
 class PostgresAdapterTest {
-        private static final DataSource DATA_SOURCE = dataSource();
-
         @Container
         static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
                         .withDatabaseName("testdb")
@@ -90,6 +87,24 @@ class PostgresAdapterTest {
                                 .containsExactly(row("id", 2, "name", "Restored"));
                 assertThat(jdbc.queryForList("SELECT id, total FROM orders ORDER BY id"))
                                 .containsExactly(row("id", 20, "total", 42), row("id", 21, "total", 84));
+        }
+
+        @Test
+        void shouldRestoreJsonbValuesSerializedBySnapshotStorage() {
+                JdbcTemplate jdbc = jdbc();
+                jdbc.execute("DROP TABLE IF EXISTS audit_events");
+                jdbc.execute("CREATE TABLE audit_events (id INT PRIMARY KEY, payload JSONB)");
+
+                adapter(jdbc).restore(snapshot(Map.of(
+                                "audit_events", List.of(row(
+                                                "id", 1,
+                                                "payload", row("type", "jsonb", "value",
+                                                                "{\"source\": \"enterprise-smoke\"}", "null",
+                                                                false))))));
+
+                String payload = jdbc.queryForObject("SELECT payload::text FROM audit_events WHERE id = 1",
+                                String.class);
+                assertThat(payload).isEqualTo("{\"source\": \"enterprise-smoke\"}");
         }
 
         @Test
@@ -165,19 +180,15 @@ class PostgresAdapterTest {
         }
 
         private static JdbcTemplate jdbc() {
-                return new JdbcTemplate(DATA_SOURCE);
-        }
-
-        private static PostgresAdapter adapter(JdbcTemplate jdbc) {
-                return new PostgresAdapter(jdbc, new DataSourceTransactionManager(jdbc.getDataSource()));
-        }
-
-        private static DataSource dataSource() {
                 DriverManagerDataSource dataSource = new DriverManagerDataSource();
                 dataSource.setUrl(postgres.getJdbcUrl());
                 dataSource.setUsername(postgres.getUsername());
                 dataSource.setPassword(postgres.getPassword());
-                return dataSource;
+                return new JdbcTemplate(dataSource);
+        }
+
+        private static PostgresAdapter adapter(JdbcTemplate jdbc) {
+                return new PostgresAdapter(jdbc, new DataSourceTransactionManager(jdbc.getDataSource()));
         }
 
         private static Snapshot snapshot(Map<String, List<Map<String, Object>>> tables) {
