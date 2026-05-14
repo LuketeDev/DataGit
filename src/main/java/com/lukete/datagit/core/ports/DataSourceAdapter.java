@@ -1,5 +1,6 @@
 package com.lukete.datagit.core.ports;
 
+import com.lukete.datagit.core.domain.SchemaSnapshot;
 import com.lukete.datagit.core.domain.Snapshot;
 
 /**
@@ -14,6 +15,8 @@ public interface DataSourceAdapter {
      * @return a complete snapshot of the data source
      */
     Snapshot extract();
+
+    SchemaSnapshot extractSchema();
 
     void restore(Snapshot snapshot);
 }

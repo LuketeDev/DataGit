@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +16,10 @@ import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.lukete.datagit.core.domain.ColumnSchema;
+import com.lukete.datagit.core.domain.SchemaSnapshot;
 import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.TableSchema;
 import com.lukete.datagit.core.exception.InvalidDatabaseIdentifierException;
 import com.lukete.datagit.core.exception.RestoreFailedException;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
@@ -58,6 +62,37 @@ public class PostgresAdapter implements DataSourceAdapter {
                 null,
                 "postgres",
                 tables);
+    }
+
+    @Override
+    public SchemaSnapshot extractSchema() {
+        Map<String, TableSchema> tables = new HashMap<>();
+
+        // Fetch all table names from public schema
+        String query = """
+                    SELECT
+                table_name,
+                column_name,
+                data_type,
+                is_nullable
+                FROM information_schema.columns
+                WHERE table_schema = 'public'
+                """;
+
+        var results = jdbc.queryForList(query);
+
+        for (Map<String, Object> values : results) {
+            String tableName = values.get("table_name").toString();
+            String columnName = values.get("column_name").toString();
+            String dataType = values.get("data_type").toString();
+            boolean isNullable = "YES".equalsIgnoreCase(values.get("is_nullable").toString());
+
+            ColumnSchema columnSchema = new ColumnSchema(columnName, dataType, isNullable);
+
+            tables.computeIfAbsent(tableName, ignored -> new TableSchema(tableName, new LinkedHashMap<>()));
+            tables.get(tableName).columns().put(columnName, columnSchema);
+        }
+        return new SchemaSnapshot(tables);
     }
 
     @Override
