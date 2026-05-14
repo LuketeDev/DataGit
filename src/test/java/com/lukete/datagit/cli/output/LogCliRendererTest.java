@@ -1,6 +1,7 @@
 package com.lukete.datagit.cli.output;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -70,6 +71,9 @@ class LogCliRendererTest {
                 "postgres",
                 Map.of(
                         "users", List.of(Map.of("id", 1), Map.of("id", 2)),
-                        "orders", List.of(Map.of("id", 10))));
+                        "orders", List.of(Map.of("id", 10))),
+                schemaFor(Map.of(
+                        "users", List.of(Map.of("id", 1), Map.of("id", 2)),
+                        "orders", List.of(Map.of("id", 10)))));
     }
 }

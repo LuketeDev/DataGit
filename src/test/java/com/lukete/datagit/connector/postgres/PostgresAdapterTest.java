@@ -16,7 +16,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
+import com.lukete.datagit.core.domain.SchemaSnapshot;
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.exception.InvalidDatabaseIdentifierException;
 import com.lukete.datagit.core.exception.RestoreFailedException;
@@ -48,6 +50,7 @@ class PostgresAdapterTest {
                 assertThat(snapshot.tables().get("users"))
                                 .extracting(row -> row.get("name"))
                                 .containsExactlyInAnyOrder("Lucas", "Luquinhas");
+                assertThat(snapshot.schema().tables()).containsKey("users");
 
         }
 
@@ -192,7 +195,11 @@ class PostgresAdapterTest {
         }
 
         private static Snapshot snapshot(Map<String, List<Map<String, Object>>> tables) {
-                return new Snapshot("snap-1", Instant.parse("2026-04-08T10:00:00Z"), "postgres", tables);
+                return snapshot(tables, schemaFor(tables));
+        }
+
+        private static Snapshot snapshot(Map<String, List<Map<String, Object>>> tables, SchemaSnapshot schema) {
+                return new Snapshot("snap-1", Instant.parse("2026-04-08T10:00:00Z"), "postgres", tables, schema);
         }
 
         private static Map<String, Object> row(Object... values) {

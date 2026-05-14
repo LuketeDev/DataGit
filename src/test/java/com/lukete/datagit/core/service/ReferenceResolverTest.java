@@ -2,6 +2,7 @@ package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.lukete.datagit.support.TestSnapshots.emptySchema;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -106,7 +107,7 @@ class ReferenceResolverTest {
     }
 
     private static Snapshot snapshot(String id, String timestamp) {
-        return new Snapshot(id, Instant.parse(timestamp), "postgres", Map.of());
+        return new Snapshot(id, Instant.parse(timestamp), "postgres", Map.of(), emptySchema());
     }
 
     private static class InMemorySnapshotStorage implements SnapshotStorage {

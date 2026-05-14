@@ -2,6 +2,7 @@ package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -11,6 +12,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.SchemaSnapshot;
 import com.lukete.datagit.core.exception.RestoreFailedException;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 
@@ -55,7 +57,8 @@ class RestoreServiceTest {
                 "snap-1",
                 Instant.parse("2026-04-08T10:00:00Z"),
                 "postgres",
-                Map.of("users", List.of(row)));
+                Map.of("users", List.of(row)),
+                schemaFor(Map.of("users", List.of(row))));
     }
 
     private static Map<String, List<Map<String, Object>>> deepCopy(Map<String, List<Map<String, Object>>> tables) {
@@ -72,6 +75,11 @@ class RestoreServiceTest {
 
         @Override
         public Snapshot extract() {
+            return null;
+        }
+
+        @Override
+        public SchemaSnapshot extractSchema() {
             return null;
         }
 

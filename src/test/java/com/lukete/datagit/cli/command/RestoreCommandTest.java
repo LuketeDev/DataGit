@@ -1,6 +1,8 @@
 package com.lukete.datagit.cli.command;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.lukete.datagit.support.TestSnapshots.emptySchema;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -17,6 +19,7 @@ import com.lukete.datagit.bootstrap.DataGitContext;
 import com.lukete.datagit.bootstrap.DataGitContextProvider;
 import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.cli.output.RestorePlanRenderer;
+import com.lukete.datagit.core.domain.SchemaSnapshot;
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.exception.CliExecutionExceptionHandler;
 import com.lukete.datagit.core.exception.InvalidCommandOptionsException;
@@ -201,7 +204,8 @@ class RestoreCommandTest {
                 id,
                 Instant.parse("2026-04-08T10:00:00Z").plusSeconds(offset),
                 "postgres",
-                tables);
+                tables,
+                schemaFor(tables));
     }
 
     private static Map<String, List<Map<String, Object>>> defaultTables() {
@@ -356,13 +360,19 @@ class RestoreCommandTest {
         public Snapshot createSnapshot() {
             createSnapshotCalls++;
             callOrder.add("snapshot");
-            return new Snapshot("safety-1", Instant.parse("2026-04-08T12:00:00Z"), "postgres", Map.of());
+            return new Snapshot("safety-1", Instant.parse("2026-04-08T12:00:00Z"), "postgres", Map.of(),
+                    emptySchema());
         }
     }
 
     private static class NoopAdapter implements DataSourceAdapter {
         @Override
         public Snapshot extract() {
+            return null;
+        }
+
+        @Override
+        public SchemaSnapshot extractSchema() {
             return null;
         }
 

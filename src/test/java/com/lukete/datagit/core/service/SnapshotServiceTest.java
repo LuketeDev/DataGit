@@ -1,6 +1,7 @@
 package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.config.domain.SnapshotConfig;
+import com.lukete.datagit.core.domain.SchemaSnapshot;
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 import com.lukete.datagit.core.ports.SnapshotStorage;
@@ -91,7 +93,13 @@ class SnapshotServiceTest {
                     null,
                     null,
                     "postgres",
-                    Map.of("users", rows));
+                    Map.of("users", rows),
+                    schemaFor(Map.of("users", rows)));
+        }
+
+        @Override
+        public SchemaSnapshot extractSchema() {
+            return schemaFor(Map.of("users", rows));
         }
 
         @Override

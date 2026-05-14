@@ -1,6 +1,7 @@
 package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -97,6 +98,9 @@ class SnapshotNormalizerTest {
                 "postgres",
                 Map.of(
                         "users", List.of(user),
-                        "orders", List.of(order)));
+                        "orders", List.of(order)),
+                schemaFor(Map.of(
+                        "users", List.of(user),
+                        "orders", List.of(order))));
     }
 }

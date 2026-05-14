@@ -1,6 +1,7 @@
 package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
 import java.time.Instant;
 import java.util.List;
@@ -33,7 +34,10 @@ class DiffServiceTest {
                                 "postgres",
                                 Map.of(
                                                 "users", List.of(
-                                                                Map.of("id", 1, "name", "lucas"))));
+                                                                Map.of("id", 1, "name", "lucas"))),
+                                schemaFor(Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "lucas")))));
 
                 Snapshot newSnapshot = new Snapshot(
                                 "new",
@@ -42,7 +46,11 @@ class DiffServiceTest {
                                 Map.of(
                                                 "users", List.of(
                                                                 Map.of("id", 1, "name", "lucas"),
-                                                                Map.of("id", 2, "name", "luquinhas"))));
+                                                                Map.of("id", 2, "name", "luquinhas"))),
+                                schemaFor(Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "lucas"),
+                                                                Map.of("id", 2, "name", "luquinhas")))));
 
                 DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
 
@@ -85,14 +93,19 @@ class DiffServiceTest {
                                 "postgres",
                                 Map.of(
                                                 "users", List.of(
-                                                                Map.of("id", 1, "name", "lucas"))));
+                                                                Map.of("id", 1, "name", "lucas"))),
+                                schemaFor(Map.of(
+                                                "users", List.of(
+                                                                Map.of("id", 1, "name", "lucas")))));
 
                 Snapshot newSnapshot = new Snapshot(
                                 "new",
                                 Instant.now(),
                                 "postgres",
                                 Map.of(
-                                                "users", List.of()));
+                                                "users", List.of()),
+                                schemaFor(Map.of(
+                                                "users", List.of())));
 
                 DiffResult result = diffService.compare(oldSnapshot, newSnapshot);
 
@@ -160,7 +173,7 @@ class DiffServiceTest {
         }
 
         private static Snapshot snapshot(String id, Map<String, List<Map<String, Object>>> tables) {
-                return new Snapshot(id, Instant.parse("2026-04-08T10:00:00Z"), "postgres", tables);
+                return new Snapshot(id, Instant.parse("2026-04-08T10:00:00Z"), "postgres", tables, schemaFor(tables));
         }
 
         private static Map<String, Object> row(Object... entries) {

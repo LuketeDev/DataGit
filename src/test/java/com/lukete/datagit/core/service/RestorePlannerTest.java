@@ -1,6 +1,7 @@
 package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -71,7 +72,7 @@ class RestorePlannerTest {
     }
 
     private static Snapshot snapshot(Map<String, List<Map<String, Object>>> tables) {
-        return new Snapshot("snap-1", Instant.parse("2026-04-08T10:00:00Z"), "postgres", tables);
+        return new Snapshot("snap-1", Instant.parse("2026-04-08T10:00:00Z"), "postgres", tables, schemaFor(tables));
     }
 
     @SafeVarargs

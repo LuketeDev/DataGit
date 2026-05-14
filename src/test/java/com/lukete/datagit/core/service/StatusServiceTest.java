@@ -1,6 +1,7 @@
 package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.config.domain.SnapshotConfig;
 import com.lukete.datagit.core.domain.DiffResult;
+import com.lukete.datagit.core.domain.SchemaSnapshot;
 import com.lukete.datagit.core.domain.Snapshot;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 import com.lukete.datagit.core.ports.SnapshotStorage;
@@ -69,7 +71,8 @@ class StatusServiceTest {
                 id,
                 Instant.parse("2026-04-08T10:00:00Z"),
                 "postgres",
-                Map.of("users", rows));
+                Map.of("users", rows),
+                schemaFor(Map.of("users", rows)));
     }
 
     private static DataGitConfig config() {
@@ -111,6 +114,11 @@ class StatusServiceTest {
         @Override
         public Snapshot extract() {
             return snapshot;
+        }
+
+        @Override
+        public SchemaSnapshot extractSchema() {
+            return snapshot.schema();
         }
 
         @Override
