@@ -15,8 +15,9 @@ import java.util.Map;
  *                  each table
  */
 public record Snapshot(
-                String id,
-                Instant timestamp,
-                String source,
-                Map<String, List<Map<String, Object>>> tables) {
+        String id,
+        Instant timestamp,
+        String source,
+        Map<String, List<Map<String, Object>>> tables,
+        SchemaSnapshot schema) {
 }

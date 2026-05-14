@@ -36,7 +36,8 @@ public class SnapshotNormalizer {
                 snapshot.id(),
                 snapshot.timestamp(),
                 snapshot.source(),
-                normalizedTables);
+                normalizedTables,
+                snapshot.schema());
     }
 
     private Map<String, Object> normalizeRow(Map<String, Object> row, Set<String> ignored) {

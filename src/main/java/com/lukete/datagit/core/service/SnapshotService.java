@@ -40,6 +40,7 @@ public class SnapshotService {
                 snapshot.id() == null || snapshot.id().isBlank() ? UUID.randomUUID().toString() : snapshot.id(),
                 snapshot.timestamp() == null ? Instant.now() : snapshot.timestamp(),
                 snapshot.source(),
-                snapshot.tables());
+                snapshot.tables(),
+                snapshot.schema());
     }
 }

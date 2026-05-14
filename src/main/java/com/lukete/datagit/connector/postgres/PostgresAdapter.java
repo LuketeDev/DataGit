@@ -57,11 +57,14 @@ public class PostgresAdapter implements DataSourceAdapter {
             tables.put(table, rows);
         }
 
+        SchemaSnapshot schema = extractSchema();
+
         return new Snapshot(
                 null,
                 null,
                 "postgres",
-                tables);
+                tables,
+                schema);
     }
 
     @Override

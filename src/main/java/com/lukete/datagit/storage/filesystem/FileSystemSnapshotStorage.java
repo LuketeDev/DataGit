@@ -86,7 +86,8 @@ public class FileSystemSnapshotStorage implements SnapshotStorage {
         for (File file : files) {
             try {
                 snapshot = mapper.readValue(file, Snapshot.class);
-                snapshots.add(new Snapshot(snapshot.id(), snapshot.timestamp(), snapshot.source(), snapshot.tables()));
+                snapshots.add(new Snapshot(snapshot.id(), snapshot.timestamp(), snapshot.source(), snapshot.tables(),
+                        snapshot.schema()));
             } catch (Exception e) {
                 throw new RuntimeException("Failed to read snapshot file: ", e);
             }
