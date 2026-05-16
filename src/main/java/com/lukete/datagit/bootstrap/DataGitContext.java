@@ -27,6 +27,8 @@ public class DataGitContext {
         @Getter
         private final DiffService diffService;
         @Getter
+        private final SchemaDiffService schemaDiffService;
+        @Getter
         private final StatusService statusService;
         @Getter
         private final RestoreService restoreService;
@@ -49,6 +51,7 @@ public class DataGitContext {
                 this.restoreService = restoreService;
                 this.restorePlanner = null;
                 this.dataSourceTransactionManager = null;
+                this.schemaDiffService = null;
         }
 
         public DataGitContext(DataGitConfig config, JdbcTemplate jdbcTemplate,
@@ -76,6 +79,7 @@ public class DataGitContext {
 
                 // services
                 this.diffService = new DiffService(snapshotNormalizer, config);
+                this.schemaDiffService = new SchemaDiffService();
 
                 this.snapshotService = new SnapshotService(
                                 adapter,

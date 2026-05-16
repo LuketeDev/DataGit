@@ -7,13 +7,16 @@ import com.lukete.datagit.cli.command.DiffCommand;
 import com.lukete.datagit.cli.command.InitCommand;
 import com.lukete.datagit.cli.command.LogCommand;
 import com.lukete.datagit.cli.command.RestoreCommand;
+import com.lukete.datagit.cli.command.SchemaDiffCommand;
 import com.lukete.datagit.cli.command.SnapshotCommand;
 import com.lukete.datagit.cli.command.StatusCommand;
 import com.lukete.datagit.cli.output.CliPrinter;
 import com.lukete.datagit.cli.output.JsonDiffRenderer;
+import com.lukete.datagit.cli.output.JsonSchemaDiffRenderer;
 import com.lukete.datagit.cli.output.LogCliRenderer;
 import com.lukete.datagit.cli.output.RestorePlanRenderer;
 import com.lukete.datagit.cli.output.TextDiffRenderer;
+import com.lukete.datagit.cli.output.TextSchemaDiffRenderer;
 import com.lukete.datagit.core.exception.CliExecutionExceptionHandler;
 import com.lukete.datagit.core.exception.CliParameterExceptionHandler;
 import com.lukete.datagit.core.service.InitService;
@@ -41,6 +44,8 @@ public class Main {
 		var objMapper = new ObjectMapper();
 		var jsonDiffRenderer = new JsonDiffRenderer(printer, objMapper);
 		var textDiffRenderer = new TextDiffRenderer(printer);
+		var jsonSchemaDiffRenderer = new JsonSchemaDiffRenderer(printer, objMapper);
+		var textSchemaDiffRenderer = new TextSchemaDiffRenderer(printer);
 		var logCliRenderer = new LogCliRenderer(printer);
 		var restorePlanRenderer = new RestorePlanRenderer(printer);
 
@@ -48,6 +53,8 @@ public class Main {
 		commandLine.addSubcommand("snapshot", new SnapshotCommand(contextProvider, printer));
 		commandLine.addSubcommand("diff",
 				new DiffCommand(contextProvider, jsonDiffRenderer, textDiffRenderer));
+		commandLine.addSubcommand("schema-diff",
+				new SchemaDiffCommand(contextProvider, jsonSchemaDiffRenderer, textSchemaDiffRenderer));
 		commandLine.addSubcommand("log", new LogCommand(contextProvider, logCliRenderer));
 		commandLine.addSubcommand("status", new StatusCommand(contextProvider, textDiffRenderer, printer));
 		commandLine.addSubcommand("checkout", new RestoreCommand(contextProvider, restorePlanRenderer, printer));
