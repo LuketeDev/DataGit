@@ -10,11 +10,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.lukete.datagit.config.domain.DataGitConfig;
-import com.lukete.datagit.core.domain.DiffResult;
-import com.lukete.datagit.core.domain.FieldChange;
-import com.lukete.datagit.core.domain.RowChange;
-import com.lukete.datagit.core.domain.Snapshot;
-import com.lukete.datagit.core.domain.TableDiff;
+import com.lukete.datagit.core.domain.diff.DiffResult;
+import com.lukete.datagit.core.domain.diff.TableDiff;
+import com.lukete.datagit.core.domain.snapshot.FieldChange;
+import com.lukete.datagit.core.domain.snapshot.RowChange;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
 import lombok.RequiredArgsConstructor;
 

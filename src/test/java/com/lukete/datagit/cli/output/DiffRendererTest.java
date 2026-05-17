@@ -11,10 +11,13 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.lukete.datagit.core.domain.DiffResult;
-import com.lukete.datagit.core.domain.FieldChange;
-import com.lukete.datagit.core.domain.RowChange;
-import com.lukete.datagit.core.domain.TableDiff;
+import com.lukete.datagit.cli.render.CliPrinter;
+import com.lukete.datagit.cli.render.renderer.JsonDiffRenderer;
+import com.lukete.datagit.cli.render.renderer.TextDiffRenderer;
+import com.lukete.datagit.core.domain.diff.DiffResult;
+import com.lukete.datagit.core.domain.diff.TableDiff;
+import com.lukete.datagit.core.domain.snapshot.FieldChange;
+import com.lukete.datagit.core.domain.snapshot.RowChange;
 
 class DiffRendererTest {
     @Test

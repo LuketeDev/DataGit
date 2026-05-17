@@ -1,6 +1,6 @@
 package com.lukete.datagit.core.service;
 
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 
 import lombok.RequiredArgsConstructor;

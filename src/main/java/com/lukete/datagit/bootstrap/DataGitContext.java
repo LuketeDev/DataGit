@@ -1,11 +1,11 @@
 package com.lukete.datagit.bootstrap;
 
+import com.lukete.datagit.adapters.connector.postgres.PostgresAdapter;
+import com.lukete.datagit.adapters.storage.filesystem.FileSystemSnapshotStorage;
 import com.lukete.datagit.config.domain.DataGitConfig;
-import com.lukete.datagit.connector.postgres.PostgresAdapter;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 import com.lukete.datagit.core.ports.SnapshotStorage;
 import com.lukete.datagit.core.service.*;
-import com.lukete.datagit.storage.filesystem.FileSystemSnapshotStorage;
 
 import lombok.Getter;
 

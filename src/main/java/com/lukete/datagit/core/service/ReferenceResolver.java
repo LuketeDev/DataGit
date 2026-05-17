@@ -3,7 +3,7 @@ package com.lukete.datagit.core.service;
 import java.util.Comparator;
 import java.util.List;
 
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.exception.AmbiguousReferenceException;
 import com.lukete.datagit.core.exception.InvalidReferenceException;
 import com.lukete.datagit.core.exception.NoSnapshotsFoundException;

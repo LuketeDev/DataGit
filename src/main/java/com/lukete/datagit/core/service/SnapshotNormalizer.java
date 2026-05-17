@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
 public class SnapshotNormalizer {
     public Snapshot normalize(Snapshot snapshot, List<String> ignoredColumns) {

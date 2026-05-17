@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 import com.lukete.datagit.config.domain.DataGitConfig;
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 import com.lukete.datagit.core.ports.SnapshotStorage;
 

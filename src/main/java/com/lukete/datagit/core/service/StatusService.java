@@ -1,7 +1,7 @@
 package com.lukete.datagit.core.service;
 
 import com.lukete.datagit.config.domain.DataGitConfig;
-import com.lukete.datagit.core.domain.DiffResult;
+import com.lukete.datagit.core.domain.diff.DiffResult;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 
 import lombok.RequiredArgsConstructor;

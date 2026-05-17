@@ -8,8 +8,10 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.lukete.datagit.core.domain.RestorePlan;
-import com.lukete.datagit.core.domain.RestoreTablePlan;
+import com.lukete.datagit.cli.render.CliPrinter;
+import com.lukete.datagit.cli.render.renderer.RestorePlanRenderer;
+import com.lukete.datagit.core.domain.restore.RestorePlan;
+import com.lukete.datagit.core.domain.restore.RestoreTablePlan;
 
 class RestorePlanRendererTest {
 

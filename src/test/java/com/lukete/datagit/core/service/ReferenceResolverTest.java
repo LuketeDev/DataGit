@@ -12,7 +12,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.exception.AmbiguousReferenceException;
 import com.lukete.datagit.core.exception.SnapshotNotFoundException;
 import com.lukete.datagit.core.exception.NoSnapshotsFoundException;

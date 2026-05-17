@@ -1,9 +1,9 @@
 package com.lukete.datagit.core.ports;
 
-import com.lukete.datagit.core.domain.Snapshot;
-
 import java.util.List;
 import java.util.Optional;
+
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
 /**
  * Defines how snapshots are persisted and retrieved.

@@ -1,11 +1,12 @@
 package com.lukete.datagit.core.service;
 
-import com.lukete.datagit.core.domain.ColumnChanges;
-import com.lukete.datagit.core.domain.ColumnSchema;
-import com.lukete.datagit.core.domain.SchemaDiffResult;
-import com.lukete.datagit.core.domain.SchemaSnapshot;
-import com.lukete.datagit.core.domain.TableSchema;
-import com.lukete.datagit.core.domain.TableSchemaDiff;
+import com.lukete.datagit.core.domain.diff.SchemaDiffResult;
+import com.lukete.datagit.core.domain.diff.TableSchemaDiff;
+import com.lukete.datagit.core.domain.schema.ColumnChange;
+import com.lukete.datagit.core.domain.schema.ColumnSchema;
+import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
+import com.lukete.datagit.core.domain.schema.TableSchema;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +62,7 @@ public class SchemaDiffService {
             TableSchema oldTable, TableSchema newTable) {
         List<ColumnSchema> created = new ArrayList<>();
         List<ColumnSchema> deleted = new ArrayList<>();
-        List<ColumnChanges> updated = new ArrayList<>();
+        List<ColumnChange> updated = new ArrayList<>();
 
         Map<String, ColumnSchema> oldColumns = oldTable.columns();
         Map<String, ColumnSchema> newColumns = newTable.columns();
@@ -78,7 +79,7 @@ public class SchemaDiffService {
                 ColumnSchema oldColumn = oldColumns.get(columnName);
                 // Is new row different from self in old snapshot?
                 if (!oldColumn.equals(newColumn)) {
-                    updated.add(new ColumnChanges(oldColumn, newColumn));
+                    updated.add(new ColumnChange(oldColumn, newColumn));
                 }
             }
         }

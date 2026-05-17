@@ -12,7 +12,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
 class SnapshotNormalizerTest {
     private final SnapshotNormalizer normalizer = new SnapshotNormalizer();
@@ -64,7 +64,8 @@ class SnapshotNormalizerTest {
 
     @Test
     void shouldIgnoreBlankAndNullIgnoredColumnEntriesSafely() {
-        Snapshot normalized = normalizer.normalize(snapshot(), new ArrayList<>(Arrays.asList("updated_at", "", null, "   ")));
+        Snapshot normalized = normalizer.normalize(snapshot(),
+                new ArrayList<>(Arrays.asList("updated_at", "", null, "   ")));
 
         assertThat(normalized.tables().get("users").getFirst()).doesNotContainKey("updated_at");
         assertThat(normalized.tables().get("users").getFirst()).containsEntry("name", "Lucas");

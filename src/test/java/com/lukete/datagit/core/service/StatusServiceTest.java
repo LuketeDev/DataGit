@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test;
 
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.config.domain.SnapshotConfig;
-import com.lukete.datagit.core.domain.DiffResult;
-import com.lukete.datagit.core.domain.SchemaSnapshot;
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.diff.DiffResult;
+import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 import com.lukete.datagit.core.ports.SnapshotStorage;
 

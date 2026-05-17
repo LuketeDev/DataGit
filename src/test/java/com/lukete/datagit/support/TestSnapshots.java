@@ -5,10 +5,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.lukete.datagit.core.domain.ColumnSchema;
-import com.lukete.datagit.core.domain.SchemaSnapshot;
-import com.lukete.datagit.core.domain.Snapshot;
-import com.lukete.datagit.core.domain.TableSchema;
+import com.lukete.datagit.core.domain.schema.ColumnSchema;
+import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
+import com.lukete.datagit.core.domain.schema.TableSchema;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
 public final class TestSnapshots {
     private static final Instant DEFAULT_TIMESTAMP = Instant.parse("2026-04-08T10:00:00Z");

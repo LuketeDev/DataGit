@@ -1,7 +1,7 @@
 package com.lukete.datagit.cli.command;
 
 import com.lukete.datagit.bootstrap.DataGitContextProvider;
-import com.lukete.datagit.cli.output.LogCliRenderer;
+import com.lukete.datagit.cli.render.renderer.LogCliRenderer;
 
 import lombok.RequiredArgsConstructor;
 import picocli.CommandLine.Command;

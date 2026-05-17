@@ -17,10 +17,10 @@ import org.junit.jupiter.api.Test;
 
 import com.lukete.datagit.bootstrap.DataGitContext;
 import com.lukete.datagit.bootstrap.DataGitContextProvider;
-import com.lukete.datagit.cli.output.CliPrinter;
-import com.lukete.datagit.cli.output.RestorePlanRenderer;
-import com.lukete.datagit.core.domain.SchemaSnapshot;
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.cli.render.CliPrinter;
+import com.lukete.datagit.cli.render.renderer.RestorePlanRenderer;
+import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.exception.CliExecutionExceptionHandler;
 import com.lukete.datagit.core.exception.InvalidCommandOptionsException;
 import com.lukete.datagit.core.ports.DataSourceAdapter;

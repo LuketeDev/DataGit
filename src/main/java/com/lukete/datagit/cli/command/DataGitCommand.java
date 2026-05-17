@@ -1,6 +1,6 @@
 package com.lukete.datagit.cli.command;
 
-import com.lukete.datagit.cli.output.CliPrinter;
+import com.lukete.datagit.cli.render.CliPrinter;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

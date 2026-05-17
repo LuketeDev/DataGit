@@ -1,7 +1,7 @@
 package com.lukete.datagit.core.ports;
 
-import com.lukete.datagit.core.domain.SchemaSnapshot;
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
 /**
  * Contract for extracting data from a data source.

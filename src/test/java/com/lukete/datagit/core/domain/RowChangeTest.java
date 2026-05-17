@@ -9,6 +9,9 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.lukete.datagit.core.domain.snapshot.FieldChange;
+import com.lukete.datagit.core.domain.snapshot.RowChange;
+
 class RowChangeTest {
     @Test
     void shouldUseEmptyFieldChangesWhenNullIsPassed() {

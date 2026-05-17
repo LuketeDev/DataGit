@@ -11,7 +11,9 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.cli.render.CliPrinter;
+import com.lukete.datagit.cli.render.renderer.LogCliRenderer;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
 class LogCliRendererTest {
     @Test

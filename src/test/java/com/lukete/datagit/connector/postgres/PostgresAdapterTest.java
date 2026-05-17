@@ -18,8 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
-import com.lukete.datagit.core.domain.SchemaSnapshot;
-import com.lukete.datagit.core.domain.Snapshot;
+import com.lukete.datagit.adapters.connector.postgres.PostgresAdapter;
+import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
+import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.exception.InvalidDatabaseIdentifierException;
 import com.lukete.datagit.core.exception.RestoreFailedException;
 
