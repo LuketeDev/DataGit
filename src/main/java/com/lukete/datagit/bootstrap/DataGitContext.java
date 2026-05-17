@@ -1,5 +1,6 @@
 package com.lukete.datagit.bootstrap;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lukete.datagit.adapters.connector.postgres.PostgresAdapter;
 import com.lukete.datagit.adapters.storage.filesystem.FileSystemSnapshotStorage;
 import com.lukete.datagit.config.domain.DataGitConfig;
@@ -15,9 +16,12 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class DataGitContext {
 
+        @Getter
         private final DataSourceAdapter adapter;
+        @Getter
         private final SnapshotNormalizer snapshotNormalizer;
-
+        @Getter
+        private final JdbcValueNormalizer jdbcValueNormalizer;
         @Getter
         private final SnapshotStorage storage;
         @Getter
@@ -39,33 +43,31 @@ public class DataGitContext {
         @Getter
         private final DataSourceTransactionManager dataSourceTransactionManager;
 
-        public DataGitContext(ReferenceResolver referenceResolver, RestoreService restoreService) {
-                this.adapter = null;
-                this.snapshotNormalizer = null;
-                this.storage = null;
-                this.config = null;
-                this.snapshotService = null;
-                this.diffService = null;
-                this.statusService = null;
-                this.referenceResolver = referenceResolver;
-                this.restoreService = restoreService;
-                this.restorePlanner = null;
-                this.dataSourceTransactionManager = null;
-                this.schemaDiffService = null;
-        }
+        // public DataGitContext(ReferenceResolver referenceResolver, RestoreService
+        // restoreService) {
+        // this.adapter = null;
+        // this.snapshotNormalizer = null;
+        // this.storage = null;
+        // this.config = null;
+        // this.snapshotService = null;
+        // this.diffService = null;
+        // this.statusService = null;
+        // this.referenceResolver = referenceResolver;
+        // this.restoreService = restoreService;
+        // this.restorePlanner = null;
+        // this.dataSourceTransactionManager = null;
+        // this.schemaDiffService = null;
+        // }
 
         public DataGitContext(DataGitConfig config, JdbcTemplate jdbcTemplate,
                         DataSourceTransactionManager dataSourceTransactionManager) {
                 this.config = config;
 
-                // --- datasource
+                // datasource
                 var dataSource = new DriverManagerDataSource();
                 dataSource.setUrl(buildJdbcUrl(config));
                 dataSource.setUsername(config.getDatabaseConfig().getUsername());
                 dataSource.setPassword(config.getDatabaseConfig().getPassword());
-
-                // adapter
-                this.adapter = new PostgresAdapter(jdbcTemplate, dataSourceTransactionManager);
 
                 // storage
                 this.storage = new FileSystemSnapshotStorage(
@@ -73,6 +75,10 @@ public class DataGitContext {
 
                 // normalizer
                 this.snapshotNormalizer = new SnapshotNormalizer();
+                this.jdbcValueNormalizer = new DefaultJdbcValueNormalizer(new ObjectMapper());
+
+                // adapter
+                this.adapter = new PostgresAdapter(jdbcTemplate, dataSourceTransactionManager, jdbcValueNormalizer);
 
                 // resolver
                 this.referenceResolver = new ReferenceResolver(storage);

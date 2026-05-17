@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -16,6 +17,7 @@ import org.springframework.jdbc.core.SqlParameterValue;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.lukete.datagit.core.domain.schema.ColumnSchema;
 import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
 import com.lukete.datagit.core.domain.schema.TableSchema;
@@ -23,6 +25,7 @@ import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.exception.InvalidDatabaseIdentifierException;
 import com.lukete.datagit.core.exception.RestoreFailedException;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
+import com.lukete.datagit.core.service.JdbcValueNormalizer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +36,7 @@ import lombok.RequiredArgsConstructor;
 public class PostgresAdapter implements DataSourceAdapter {
     private final JdbcTemplate jdbc;
     private final PlatformTransactionManager transactionManager;
+    private final JdbcValueNormalizer valueNormalizer;
 
     /**
      * Reads all tables from the {@code public} schema and builds a snapshot from
@@ -40,31 +44,38 @@ public class PostgresAdapter implements DataSourceAdapter {
      *
      * @return a snapshot containing the data currently available in the configured
      *         database
+     * @throws JsonProcessingException
      */
     @Override
     public Snapshot extract() {
-        Map<String, List<Map<String, Object>>> tables = new HashMap<>();
+        Map<String, List<Map<String, Object>>> tables = new TreeMap<>();
 
         // Fetch all table names from public schema
         List<String> tableNames = jdbc
-                .queryForList("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'",
+                .queryForList(
+                        """
+                                SELECT table_name
+                                FROM information_schema.tables
+                                WHERE table_schema = 'public'
+                                ORDER BY table_name""",
                         String.class);
 
         for (String table : tableNames) {
             // Fetch all rows from table
-            List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM " + table);
+            List<Map<String, Object>> rows = jdbc.queryForList("SELECT * FROM " + table + " ORDER BY id");
+            List<Map<String, Object>> normalizedRows = rows.stream()
+                    .map(this::normalizeRow)
+                    .toList();
 
-            tables.put(table, rows);
+            tables.put(table, normalizedRows);
         }
-
-        SchemaSnapshot schema = extractSchema();
 
         return new Snapshot(
                 null,
                 null,
                 "postgres",
                 tables,
-                schema);
+                extractSchema());
     }
 
     @Override
@@ -172,6 +183,18 @@ public class PostgresAdapter implements DataSourceAdapter {
         if (identifier == null || !identifier.matches("[a-zA-Z_]\\w*")) {
             throw new InvalidDatabaseIdentifierException("Invalid database identifier: " + identifier);
         }
+    }
+
+    private Map<String, Object> normalizeRow(Map<String, Object> row) {
+        Map<String, Object> normalized = new LinkedHashMap<>();
+
+        for (var entry : row.entrySet()) {
+            normalized.put(
+                    entry.getKey(),
+                    valueNormalizer.normalize(entry.getValue()));
+        }
+
+        return normalized;
     }
 
     /**
