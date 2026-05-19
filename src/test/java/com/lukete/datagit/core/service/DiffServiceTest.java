@@ -2,13 +2,18 @@ package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static com.lukete.datagit.support.TestSnapshots.schemaFor;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.config.domain.SnapshotConfig;
 import com.lukete.datagit.core.domain.diff.DiffResult;
@@ -16,7 +21,8 @@ import com.lukete.datagit.core.domain.snapshot.FieldChange;
 import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
 class DiffServiceTest {
-        private final DiffService diffService = new DiffService(new SnapshotNormalizer(), createConfig());
+        private final CliPrinter printer = mock(CliPrinter.class);
+        private final DiffService diffService = new DiffService(new SnapshotNormalizer(), createConfig(), printer);
 
         private static DataGitConfig createConfig() {
                 DataGitConfig config = new DataGitConfig();
@@ -170,6 +176,33 @@ class DiffServiceTest {
                 assertThat(result.tables().get("users").inserted()).isEmpty();
                 assertThat(result.tables().get("users").deleted()).isEmpty();
                 assertThat(result.tables().get("users").updated()).isEmpty();
+        }
+
+        @Test
+        void shouldEmitPerformanceLogsForNormalizationAndComparison() {
+                Snapshot oldSnapshot = snapshot("old", Map.of(
+                                "users", List.of(Map.of("id", 1, "name", "lucas"))));
+                Snapshot newSnapshot = snapshot("new", Map.of(
+                                "users", List.of(Map.of("id", 1, "name", "luquinhas"))));
+
+                diffService.compare(oldSnapshot, newSnapshot);
+
+                verify(printer).performance(org.mockito.ArgumentMatchers.contains("Snapshot normalized in"));
+                verify(printer).performance(org.mockito.ArgumentMatchers.contains("(Diff) Snapshots compared in"));
+        }
+
+        @Test
+        void shouldEmitPerformanceLogsInCorrectOrder() {
+                Snapshot oldSnapshot = snapshot("old", Map.of(
+                                "users", List.of(Map.of("id", 1, "name", "lucas"))));
+                Snapshot newSnapshot = snapshot("new", Map.of(
+                                "users", List.of(Map.of("id", 1, "name", "luquinhas"))));
+
+                diffService.compare(oldSnapshot, newSnapshot);
+
+                InOrder order = inOrder(printer);
+                order.verify(printer).performance(org.mockito.ArgumentMatchers.contains("Snapshot normalized in"));
+                order.verify(printer).performance(org.mockito.ArgumentMatchers.contains("(Diff) Snapshots compared in"));
         }
 
         private static Snapshot snapshot(String id, Map<String, List<Map<String, Object>>> tables) {

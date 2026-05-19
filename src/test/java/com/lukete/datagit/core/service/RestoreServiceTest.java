@@ -3,6 +3,9 @@ package com.lukete.datagit.core.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static com.lukete.datagit.support.TestSnapshots.schemaFor;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -11,6 +14,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
 import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.exception.RestoreFailedException;
@@ -22,8 +26,9 @@ class RestoreServiceTest {
     void shouldRestoreSnapshotThroughAdapter() {
         FakeAdapter adapter = new FakeAdapter();
         Snapshot snapshot = snapshot();
+        CliPrinter printer = mock(CliPrinter.class);
 
-        new RestoreService(adapter).restore(snapshot);
+        new RestoreService(adapter, printer).restore(snapshot);
 
         assertThat(adapter.restoredSnapshot).isSameAs(snapshot);
     }
@@ -32,9 +37,12 @@ class RestoreServiceTest {
     void shouldPropagateAdapterExceptions() {
         FakeAdapter adapter = new FakeAdapter();
         adapter.exception = new RestoreFailedException("failed", new RuntimeException("boom"));
+        CliPrinter printer = mock(CliPrinter.class);
 
-        assertThatThrownBy(() -> new RestoreService(adapter).restore(snapshot()))
+        assertThatThrownBy(() -> new RestoreService(adapter, printer).restore(snapshot()))
                 .isSameAs(adapter.exception);
+
+        verify(printer, never()).performance(org.mockito.ArgumentMatchers.anyString());
     }
 
     @Test
@@ -42,10 +50,21 @@ class RestoreServiceTest {
         FakeAdapter adapter = new FakeAdapter();
         Snapshot snapshot = snapshot();
         Map<String, List<Map<String, Object>>> originalTables = deepCopy(snapshot.tables());
+        CliPrinter printer = mock(CliPrinter.class);
 
-        new RestoreService(adapter).restore(snapshot);
+        new RestoreService(adapter, printer).restore(snapshot);
 
         assertThat(snapshot.tables()).isEqualTo(originalTables);
+    }
+
+    @Test
+    void shouldEmitPerformanceLogWhenSnapshotIsRestored() {
+        FakeAdapter adapter = new FakeAdapter();
+        CliPrinter printer = mock(CliPrinter.class);
+
+        new RestoreService(adapter, printer).restore(snapshot());
+
+        verify(printer).performance(org.mockito.ArgumentMatchers.contains("Snapshot restored in"));
     }
 
     private static Snapshot snapshot() {

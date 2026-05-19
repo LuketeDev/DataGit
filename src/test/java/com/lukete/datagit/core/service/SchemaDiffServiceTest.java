@@ -1,12 +1,15 @@
 package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.core.domain.diff.SchemaDiffResult;
 import com.lukete.datagit.core.domain.schema.ColumnChange;
 import com.lukete.datagit.core.domain.schema.ColumnSchema;
@@ -14,7 +17,8 @@ import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
 import com.lukete.datagit.core.domain.schema.TableSchema;
 
 class SchemaDiffServiceTest {
-    private final SchemaDiffService service = new SchemaDiffService();
+    private final CliPrinter printer = mock(CliPrinter.class);
+    private final SchemaDiffService service = new SchemaDiffService(printer);
 
     @Test
     void shouldDetectCreatedTables() {
@@ -139,6 +143,15 @@ class SchemaDiffServiceTest {
         assertThat(diff.createdTables()).isEmpty();
         assertThat(diff.deletedTables()).isEmpty();
         assertThat(diff.updatedTables()).isEmpty();
+    }
+
+    @Test
+    void shouldEmitPerformanceLogWhenComparingSchemas() {
+        service.compare(
+                schema(table("users", column("id", "integer", false))),
+                schema(table("users", column("id", "bigint", false))));
+
+        verify(printer).performance(org.mockito.ArgumentMatchers.contains("(Schema) snapshots compared in"));
     }
 
     private static SchemaSnapshot schema(TableSchema... tables) {

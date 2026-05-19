@@ -7,12 +7,9 @@ import java.io.IOException;
 import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.core.exception.ConfigCreationException;
 
-import lombok.RequiredArgsConstructor;
-
 /**
  * Creates the initial DataGit configuration and snapshot storage directories.
  */
-@RequiredArgsConstructor
 public class InitService {
     private static final String DEFAULT_CONFIG = """
             database:
@@ -34,6 +31,16 @@ public class InitService {
             """;
 
     private final CliPrinter printer;
+    private final File baseDir;
+
+    public InitService(CliPrinter printer) {
+        this(printer, new File("."));
+    }
+
+    InitService(CliPrinter printer, File baseDir) {
+        this.printer = printer;
+        this.baseDir = baseDir;
+    }
 
     /**
      * Creates the {@code .datagit} directory structure and writes the default
@@ -41,9 +48,9 @@ public class InitService {
      */
     public void setupConfig() {
         Stopwatch totalStopwatch = Stopwatch.start();
-        File rootDir = new File(".datagit");
-        File configFile = new File(".datagit/config.yml");
-        File snapshotsDir = new File(".datagit/snapshots");
+        File rootDir = new File(baseDir, ".datagit");
+        File configFile = new File(rootDir, "config.yml");
+        File snapshotsDir = new File(rootDir, "snapshots");
 
         if (rootDir.exists()) {
             throw new ConfigCreationException("DataGit already initialized in this directory.");

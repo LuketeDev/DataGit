@@ -1,6 +1,7 @@
 package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.config.domain.SnapshotConfig;
 import com.lukete.datagit.core.domain.diff.DiffResult;
@@ -42,8 +44,10 @@ class SchemaDiffRegressionTest {
                         column("name", "text", true),
                         column("email", "text", true))));
 
-        DiffResult rowDiff = new DiffService(new SnapshotNormalizer(), config()).compare(oldSnapshot, newSnapshot);
-        SchemaDiffResult schemaDiff = new SchemaDiffService().compare(oldSnapshot.schema(), newSnapshot.schema());
+        DiffResult rowDiff = new DiffService(new SnapshotNormalizer(), config(), mock(CliPrinter.class))
+                .compare(oldSnapshot, newSnapshot);
+        SchemaDiffResult schemaDiff = new SchemaDiffService(mock(CliPrinter.class))
+                .compare(oldSnapshot.schema(), newSnapshot.schema());
 
         assertThat(rowDiff.tables().get("users").updated().getFirst().fieldChanges())
                 .containsExactly(
@@ -74,7 +78,7 @@ class SchemaDiffRegressionTest {
                         column("email", "text", true)))));
 
         ReferenceResolver resolver = new ReferenceResolver(storage);
-        SchemaDiffResult diff = new SchemaDiffService().compare(
+        SchemaDiffResult diff = new SchemaDiffService(mock(CliPrinter.class)).compare(
                 resolver.resolve("HEAD~1").schema(),
                 resolver.resolve("HEAD").schema());
 

@@ -3,6 +3,7 @@ package com.lukete.datagit.cli.command;
 import static org.assertj.core.api.Assertions.assertThat;
 import static com.lukete.datagit.support.TestSnapshots.emptySchema;
 import static com.lukete.datagit.support.TestSnapshots.schemaFor;
+import static org.mockito.Mockito.mock;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -322,7 +323,7 @@ class RestoreCommandTest {
         }
 
         @Override
-        public DataGitContext get() {
+        public DataGitContext get(CliPrinter printer) {
             return context;
         }
     }
@@ -334,7 +335,7 @@ class RestoreCommandTest {
         private Snapshot restoredSnapshot;
 
         private RecordingRestoreService(List<String> callOrder) {
-            super(new NoopAdapter());
+            super(new NoopAdapter(), mock(CliPrinter.class));
             this.callOrder = callOrder;
         }
 
@@ -352,7 +353,7 @@ class RestoreCommandTest {
         private int createSnapshotCalls;
 
         private RecordingSnapshotService(List<String> callOrder) {
-            super(null, null, null, null);
+            super(null, null, null, null, mock(CliPrinter.class));
             this.callOrder = callOrder;
         }
 

@@ -2,6 +2,8 @@ package com.lukete.datagit.core.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static com.lukete.datagit.support.TestSnapshots.schemaFor;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.config.domain.SnapshotConfig;
 import com.lukete.datagit.core.domain.diff.DiffResult;
@@ -29,13 +32,15 @@ class StatusServiceTest {
         DataSourceAdapter adapter = new ExtractingAdapter(snapshot("current", List.of(
                 Map.of("id", 1, "name", "after"),
                 Map.of("id", 3, "name", "inserted"))));
+        CliPrinter statusPrinter = mock(CliPrinter.class);
 
         StatusService service = new StatusService(
                 adapter,
                 new ReferenceResolver(storage),
-                new DiffService(new SnapshotNormalizer(), config()),
+                new DiffService(new SnapshotNormalizer(), config(), mock(CliPrinter.class)),
                 new SnapshotNormalizer(),
-                config());
+                config(),
+                statusPrinter);
 
         DiffResult result = service.getStatus();
 
@@ -44,6 +49,7 @@ class StatusServiceTest {
         assertThat(result.tables().get("users").updated()).hasSize(1);
         assertThat(result.tables().get("users").deleted()).hasSize(1);
         assertThat(result.tables().get("users").inserted()).hasSize(1);
+        verify(statusPrinter).performance(org.mockito.ArgumentMatchers.contains("Status generated in"));
     }
 
     @Test
@@ -53,17 +59,40 @@ class StatusServiceTest {
         int saveCountAfterSetup = storage.saveCount;
         DataSourceAdapter adapter = new ExtractingAdapter(
                 snapshot("current", List.of(Map.of("id", 1, "name", "same"))));
+        CliPrinter statusPrinter = mock(CliPrinter.class);
 
         StatusService service = new StatusService(
                 adapter,
                 new ReferenceResolver(storage),
-                new DiffService(new SnapshotNormalizer(), config()),
+                new DiffService(new SnapshotNormalizer(), config(), mock(CliPrinter.class)),
                 new SnapshotNormalizer(),
-                config());
+                config(),
+                statusPrinter);
 
         service.getStatus();
 
         assertThat(storage.saveCount).isEqualTo(saveCountAfterSetup);
+    }
+
+    @Test
+    void shouldEmitPerformanceLogWhenGeneratingStatus() {
+        CountingStorage storage = new CountingStorage();
+        storage.save(snapshot("head", List.of(Map.of("id", 1, "name", "same"))));
+        DataSourceAdapter adapter = new ExtractingAdapter(
+                snapshot("current", List.of(Map.of("id", 1, "name", "same"))));
+        CliPrinter statusPrinter = mock(CliPrinter.class);
+
+        StatusService service = new StatusService(
+                adapter,
+                new ReferenceResolver(storage),
+                new DiffService(new SnapshotNormalizer(), config(), mock(CliPrinter.class)),
+                new SnapshotNormalizer(),
+                config(),
+                statusPrinter);
+
+        service.getStatus();
+
+        verify(statusPrinter).performance(org.mockito.ArgumentMatchers.contains("Status generated in"));
     }
 
     private static Snapshot snapshot(String id, List<Map<String, Object>> rows) {
