@@ -43,21 +43,21 @@ public class DataGitContext {
         @Getter
         private final DataSourceTransactionManager dataSourceTransactionManager;
 
-        // public DataGitContext(ReferenceResolver referenceResolver, RestoreService
-        // restoreService) {
-        // this.adapter = null;
-        // this.snapshotNormalizer = null;
-        // this.storage = null;
-        // this.config = null;
-        // this.snapshotService = null;
-        // this.diffService = null;
-        // this.statusService = null;
-        // this.referenceResolver = referenceResolver;
-        // this.restoreService = restoreService;
-        // this.restorePlanner = null;
-        // this.dataSourceTransactionManager = null;
-        // this.schemaDiffService = null;
-        // }
+        public DataGitContext(ReferenceResolver referenceResolver, RestoreService restoreService) {
+                this.adapter = null;
+                this.snapshotNormalizer = null;
+                this.storage = null;
+                this.config = null;
+                this.snapshotService = null;
+                this.diffService = null;
+                this.statusService = null;
+                this.referenceResolver = referenceResolver;
+                this.restoreService = restoreService;
+                this.restorePlanner = null;
+                this.dataSourceTransactionManager = null;
+                this.schemaDiffService = null;
+                this.jdbcValueNormalizer = null;
+        }
 
         public DataGitContext(DataGitConfig config, JdbcTemplate jdbcTemplate,
                         DataSourceTransactionManager dataSourceTransactionManager) {

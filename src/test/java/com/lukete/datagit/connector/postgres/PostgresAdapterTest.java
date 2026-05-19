@@ -18,11 +18,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static com.lukete.datagit.support.TestSnapshots.schemaFor;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lukete.datagit.adapters.connector.postgres.PostgresAdapter;
 import com.lukete.datagit.core.domain.schema.SchemaSnapshot;
 import com.lukete.datagit.core.domain.snapshot.Snapshot;
 import com.lukete.datagit.core.exception.InvalidDatabaseIdentifierException;
 import com.lukete.datagit.core.exception.RestoreFailedException;
+import com.lukete.datagit.core.service.DefaultJdbcValueNormalizer;
 
 @Testcontainers
 class PostgresAdapterTest {
@@ -192,7 +194,8 @@ class PostgresAdapterTest {
         }
 
         private static PostgresAdapter adapter(JdbcTemplate jdbc) {
-                return new PostgresAdapter(jdbc, new DataSourceTransactionManager(jdbc.getDataSource()));
+                return new PostgresAdapter(jdbc, new DataSourceTransactionManager(jdbc.getDataSource()),
+                                new DefaultJdbcValueNormalizer(new ObjectMapper()));
         }
 
         private static Snapshot snapshot(Map<String, List<Map<String, Object>>> tables) {
