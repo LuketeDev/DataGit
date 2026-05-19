@@ -26,6 +26,7 @@ import com.lukete.datagit.core.exception.InvalidDatabaseIdentifierException;
 import com.lukete.datagit.core.exception.RestoreFailedException;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 import com.lukete.datagit.core.service.JdbcValueNormalizer;
+import com.lukete.datagit.core.service.TypeNormalizer;
 
 import lombok.RequiredArgsConstructor;
 
@@ -80,7 +81,7 @@ public class PostgresAdapter implements DataSourceAdapter {
 
     @Override
     public SchemaSnapshot extractSchema() {
-        Map<String, TableSchema> tables = new HashMap<>();
+        Map<String, TableSchema> tables = new TreeMap<>();
 
         // Fetch all table names from public schema
         String query = """
@@ -91,6 +92,7 @@ public class PostgresAdapter implements DataSourceAdapter {
                 is_nullable
                 FROM information_schema.columns
                 WHERE table_schema = 'public'
+                ORDER BY table_name, ordinal_position
                 """;
 
         var results = jdbc.queryForList(query);
@@ -98,7 +100,7 @@ public class PostgresAdapter implements DataSourceAdapter {
         for (Map<String, Object> values : results) {
             String tableName = values.get("table_name").toString();
             String columnName = values.get("column_name").toString();
-            String dataType = values.get("data_type").toString();
+            String dataType = TypeNormalizer.normalize(values.get("data_type").toString());
             boolean isNullable = "YES".equalsIgnoreCase(values.get("is_nullable").toString());
 
             ColumnSchema columnSchema = new ColumnSchema(columnName, dataType, isNullable);
