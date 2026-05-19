@@ -21,7 +21,7 @@ public class SnapshotCommand implements Runnable {
      */
     @Override
     public void run() {
-        var context = contextProvider.get();
+        var context = contextProvider.get(printer);
         var snapshot = context.getSnapshotService().createSnapshot();
 
         printer.success("Snapshot created: " + snapshot.id());

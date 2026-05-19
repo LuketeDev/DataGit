@@ -32,7 +32,7 @@ public class RestoreCommand implements Runnable {
             throw new InvalidCommandOptionsException("Options --yes and --dry-run cannot be used together.");
         }
 
-        var context = contextProvider.get();
+        var context = contextProvider.get(printer);
 
         var snapshot = context.getReferenceResolver().resolve(ref);
         var plan = context.getRestorePlanner().plan(snapshot);

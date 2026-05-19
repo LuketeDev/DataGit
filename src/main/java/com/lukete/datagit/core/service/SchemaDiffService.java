@@ -1,5 +1,6 @@
 package com.lukete.datagit.core.service;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.core.domain.diff.SchemaDiffResult;
 import com.lukete.datagit.core.domain.diff.TableSchemaDiff;
 import com.lukete.datagit.core.domain.schema.ColumnChange;
@@ -16,8 +17,10 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class SchemaDiffService {
+    private final CliPrinter printer;
 
     public SchemaDiffResult compare(SchemaSnapshot oldSchema, SchemaSnapshot newSchema) {
+        Stopwatch totalStopwatch = Stopwatch.start();
         List<TableSchema> createdTables = new ArrayList<>();
         List<TableSchema> deletedTables = new ArrayList<>();
         Map<String, TableSchemaDiff> updatedTables = new HashMap<>();
@@ -55,6 +58,7 @@ public class SchemaDiffService {
                 updatedTables.put(table.getKey(), tableSchemaDiff);
             }
         }
+        printer.performance("(Schema) snapshots compared in " + totalStopwatch.elapsedMillis() + "ms");
         return new SchemaDiffResult(createdTables, deletedTables, updatedTables);
     }
 

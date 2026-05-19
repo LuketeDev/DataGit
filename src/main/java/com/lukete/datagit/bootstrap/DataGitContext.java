@@ -3,6 +3,7 @@ package com.lukete.datagit.bootstrap;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lukete.datagit.adapters.connector.postgres.PostgresAdapter;
 import com.lukete.datagit.adapters.storage.filesystem.FileSystemSnapshotStorage;
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.core.ports.DataSourceAdapter;
 import com.lukete.datagit.core.ports.SnapshotStorage;
@@ -60,7 +61,7 @@ public class DataGitContext {
         }
 
         public DataGitContext(DataGitConfig config, JdbcTemplate jdbcTemplate,
-                        DataSourceTransactionManager dataSourceTransactionManager) {
+                        DataSourceTransactionManager dataSourceTransactionManager, CliPrinter printer) {
                 this.config = config;
 
                 // datasource
@@ -84,23 +85,25 @@ public class DataGitContext {
                 this.referenceResolver = new ReferenceResolver(storage);
 
                 // services
-                this.diffService = new DiffService(snapshotNormalizer, config);
-                this.schemaDiffService = new SchemaDiffService();
+                this.diffService = new DiffService(snapshotNormalizer, config, printer);
+                this.schemaDiffService = new SchemaDiffService(printer);
 
                 this.snapshotService = new SnapshotService(
                                 adapter,
                                 storage,
                                 snapshotNormalizer,
-                                config);
+                                config,
+                                printer);
 
                 this.statusService = new StatusService(
                                 adapter,
                                 referenceResolver,
                                 diffService,
                                 snapshotNormalizer,
-                                config);
+                                config,
+                                printer);
 
-                this.restoreService = new RestoreService(adapter);
+                this.restoreService = new RestoreService(adapter, printer);
                 this.restorePlanner = new RestorePlanner();
                 this.dataSourceTransactionManager = dataSourceTransactionManager;
         }

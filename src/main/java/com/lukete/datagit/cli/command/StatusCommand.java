@@ -20,7 +20,7 @@ public class StatusCommand implements Runnable {
         printer.info("Comparing current database against HEAD");
         printer.blankLine();
 
-        var context = contextProvider.get();
+        var context = contextProvider.get(printer);
         var diffResult = context.getStatusService().getStatus();
 
         renderer.render("HEAD", "CURRENT", diffResult);

@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.core.domain.diff.DiffResult;
 import com.lukete.datagit.core.domain.diff.TableDiff;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class DiffService {
     private final SnapshotNormalizer snapshotNormalizer;
     private final DataGitConfig config;
+    private final CliPrinter printer;
 
     /**
      * Compares two snapshots and wraps the resulting table diffs in a single
@@ -36,12 +38,16 @@ public class DiffService {
      * @return the complete diff between both snapshots
      */
     public DiffResult compare(Snapshot oldSnap, Snapshot newSnap) {
+        Stopwatch normalizationStopwatch = Stopwatch.start();
+        Stopwatch totalStopwatch = Stopwatch.start();
         Snapshot normalizedOldSnap = snapshotNormalizer.normalize(oldSnap,
                 config.getSnapshotConfig().getIgnoredColumns());
         Snapshot normalizedNewSnap = snapshotNormalizer.normalize(newSnap,
                 config.getSnapshotConfig().getIgnoredColumns());
+        printer.performance("Snapshot normalized in " + normalizationStopwatch.elapsedMillis() + "ms");
 
         Map<String, TableDiff> tableDiffs = compareTableDiffs(normalizedOldSnap, normalizedNewSnap);
+        printer.performance("(Diff) Snapshots compared in " + totalStopwatch.elapsedMillis() + "ms");
 
         return new DiffResult(oldSnap.id(), newSnap.id(), tableDiffs);
     }

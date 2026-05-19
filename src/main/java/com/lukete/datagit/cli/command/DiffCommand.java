@@ -1,6 +1,7 @@
 package com.lukete.datagit.cli.command;
 
 import com.lukete.datagit.bootstrap.DataGitContextProvider;
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.cli.render.formatter.OutputFormat;
 import com.lukete.datagit.cli.render.renderer.DiffRenderer;
 
@@ -29,6 +30,7 @@ public class DiffCommand implements Runnable {
     private final DataGitContextProvider contextProvider;
     private final DiffRenderer jsonRenderer;
     private final DiffRenderer textRenderer;
+    private final CliPrinter printer;
 
     /**
      * Resolves the requested snapshots, computes the diff, and prints it in the
@@ -36,7 +38,7 @@ public class DiffCommand implements Runnable {
      */
     @Override
     public void run() {
-        var context = contextProvider.get();
+        var context = contextProvider.get(printer);
 
         var oldSnap = context.getReferenceResolver().resolve(oldId);
         var newSnap = context.getReferenceResolver().resolve(newId);

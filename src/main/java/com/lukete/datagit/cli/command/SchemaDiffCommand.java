@@ -1,6 +1,7 @@
 package com.lukete.datagit.cli.command;
 
 import com.lukete.datagit.bootstrap.DataGitContextProvider;
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.cli.render.formatter.OutputFormat;
 import com.lukete.datagit.cli.render.renderer.SchemaDiffRenderer;
 
@@ -30,6 +31,7 @@ public class SchemaDiffCommand implements Runnable {
     private final DataGitContextProvider contextProvider;
     private final SchemaDiffRenderer jsonRenderer;
     private final SchemaDiffRenderer textRenderer;
+    private final CliPrinter printer;
 
     /**
      * Resolves the requested snapshots, computes the diff, and prints it in the
@@ -37,7 +39,7 @@ public class SchemaDiffCommand implements Runnable {
      */
     @Override
     public void run() {
-        var context = contextProvider.get();
+        var context = contextProvider.get(printer);
 
         var oldSchema = context.getReferenceResolver().resolve(oldId).schema();
         var newSchema = context.getReferenceResolver().resolve(newId).schema();

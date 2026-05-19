@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.config.domain.DataGitConfig;
 import com.lukete.datagit.config.domain.SnapshotConfig;
 import com.lukete.datagit.core.domain.schema.SchemaSnapshot;

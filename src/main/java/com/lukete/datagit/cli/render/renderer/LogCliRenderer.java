@@ -8,6 +8,7 @@ import java.util.List;
 import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.core.domain.snapshot.Snapshot;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -18,6 +19,7 @@ public class LogCliRenderer {
     private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             .withZone(ZoneId.systemDefault());
 
+    @Getter
     private final CliPrinter printer;
 
     public void render(List<Snapshot> snapshots) {

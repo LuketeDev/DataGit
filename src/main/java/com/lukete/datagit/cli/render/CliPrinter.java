@@ -43,6 +43,10 @@ public class CliPrinter {
         print(MessageStyle.HINT, message);
     }
 
+    public void performance(String message) {
+        print(MessageStyle.PERFORMANCE, message);
+    }
+
     public void blankLine() {
         out.println();
     }

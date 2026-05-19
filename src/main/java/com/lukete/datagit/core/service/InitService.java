@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.core.exception.ConfigCreationException;
 
 import lombok.RequiredArgsConstructor;
@@ -32,11 +33,14 @@ public class InitService {
                 - created_at
             """;
 
+    private final CliPrinter printer;
+
     /**
      * Creates the {@code .datagit} directory structure and writes the default
      * configuration file.
      */
     public void setupConfig() {
+        Stopwatch totalStopwatch = Stopwatch.start();
         File rootDir = new File(".datagit");
         File configFile = new File(".datagit/config.yml");
         File snapshotsDir = new File(".datagit/snapshots");
@@ -54,5 +58,6 @@ public class InitService {
         } catch (IOException e) {
             throw new ConfigCreationException("Failed to write config file.", e);
         }
+        printer.performance("Configuration generated in " + totalStopwatch.elapsedMillis() + "ms");
     }
 }

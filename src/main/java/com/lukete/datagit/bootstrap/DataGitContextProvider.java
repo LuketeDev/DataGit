@@ -6,6 +6,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.lukete.datagit.cli.render.CliPrinter;
 import com.lukete.datagit.config.ConfigLoader;
 import com.lukete.datagit.config.ConfigValidator;
 import com.lukete.datagit.config.ProjectLocator;
@@ -14,14 +15,14 @@ import com.lukete.datagit.config.domain.DataGitConfig;
 public class DataGitContextProvider {
     private DataGitContext context;
 
-    public DataGitContext get() {
+    public DataGitContext get(CliPrinter printer) {
         if (context == null) {
-            context = bootstrap();
+            context = bootstrap(printer);
         }
         return context;
     }
 
-    private DataGitContext bootstrap() {
+    private DataGitContext bootstrap(CliPrinter printer) {
 
         var projectLocator = new ProjectLocator();
         projectLocator.validateProjectInitialized();
@@ -36,7 +37,7 @@ public class DataGitContextProvider {
         var jdbcTemplate = new JdbcTemplate(datasource);
         var transactionManager = new DataSourceTransactionManager(datasource);
 
-        return new DataGitContext(config, jdbcTemplate, transactionManager);
+        return new DataGitContext(config, jdbcTemplate, transactionManager, printer);
     }
 
     private DriverManagerDataSource createDataSource(DataGitConfig config) {

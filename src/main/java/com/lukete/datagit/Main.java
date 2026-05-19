@@ -40,7 +40,7 @@ public class Main {
 		var printer = new CliPrinter(commandLine.getOut(), commandLine.getErr());
 		root.setPrinter(printer);
 		var contextProvider = new DataGitContextProvider();
-		var initService = new InitService();
+		var initService = new InitService(printer);
 		var objMapper = new ObjectMapper();
 		var jsonDiffRenderer = new JsonDiffRenderer(printer, objMapper);
 		var textDiffRenderer = new TextDiffRenderer(printer);
@@ -52,10 +52,10 @@ public class Main {
 		commandLine.addSubcommand("init", new InitCommand(initService, printer));
 		commandLine.addSubcommand("snapshot", new SnapshotCommand(contextProvider, printer));
 		commandLine.addSubcommand("diff",
-				new DiffCommand(contextProvider, jsonDiffRenderer, textDiffRenderer));
+				new DiffCommand(contextProvider, jsonDiffRenderer, textDiffRenderer, printer));
 		commandLine.addSubcommand("schema-diff",
-				new SchemaDiffCommand(contextProvider, jsonSchemaDiffRenderer, textSchemaDiffRenderer));
-		commandLine.addSubcommand("log", new LogCommand(contextProvider, logCliRenderer));
+				new SchemaDiffCommand(contextProvider, jsonSchemaDiffRenderer, textSchemaDiffRenderer, printer));
+		commandLine.addSubcommand("log", new LogCommand(contextProvider, logCliRenderer, printer));
 		commandLine.addSubcommand("status", new StatusCommand(contextProvider, textDiffRenderer, printer));
 		commandLine.addSubcommand("checkout", new RestoreCommand(contextProvider, restorePlanRenderer, printer));
 
